@@ -15,7 +15,7 @@ The implementation follows the official [`@deepseek-ai/dsh-subagent-codex`](http
 
 No model or reasoning effort is restricted by the public bundle. Omitted model settings retain native defaults. Explicit settings must be supported by the ACP runtime and successfully read back; there is no fallback to another model, backend, or host executable.
 
-Version **0.2.0** defaults to the ACP runtime's own authentication selection and supports explicitly selecting each native login route. Users upgrading from 0.1.0 who want its ADC behavior should set `authMethod: agent-platform` and `agentPlatformMode: adc`.
+Version **0.2.1** includes the pinned native runtime in its Windows x64 release bundle. Authentication remains selectable, defaulting to ACP's own saved selection. Users upgrading from 0.1.0 who want its ADC behavior should set `authMethod: agent-platform` and `agentPlatformMode: adc`.
 
 ## Contents
 
@@ -30,7 +30,9 @@ Version **0.2.0** defaults to the ACP runtime's own authentication selection and
 
 ### Installing the Bundle
 
-Download the `.tgz` package from [GitHub Releases](https://github.com/AshenJyy/dsh-subagent-antigravity/releases). Add that package as a local bundle using the DSH plugin installer or Plugins page for your Profile. Use the release artifact rather than an unrelated similarly named npm package.
+Download **`ashenjyy-dsh-subagent-antigravity-0.2.1-win32-x64.tgz`** from [GitHub Releases](https://github.com/AshenJyy/dsh-subagent-antigravity/releases). This **Windows x64 complete bundle** includes ACP Server 1.4.3, its matching native harness, and their integrity record. Add it as a local bundle using the DSH plugin installer or Plugins page for your Profile. No separate runtime installer or runtime download is needed.
+
+The complete bundle has `os`/`cpu` constraints to prevent installation on the wrong platform. It still requires DSH dependencies and a usable authentication configuration; it does not include accounts or credentials. Use this repository's release artifact rather than an unrelated similarly named npm package.
 
 For the CLI, select the Profile you actually use:
 
@@ -38,13 +40,7 @@ For the CLI, select the Profile you actually use:
 dsh plugin --profile web add /absolute/path/to/the-release-package.tgz
 ```
 
-Then run the installer belonging to that installed package:
-
-```sh
-node /absolute/path/to/installed/package/lib/install.js
-```
-
-It downloads the pinned Google payload for the current platform, verifies the official registry SHA-256, and installs the executable and matching harness under the package's `native/1.4.3/` directory. Native binaries are not redistributed in the npm archive. An alternative absolute directory can be supplied with `--runtime-dir`; configure the same directory in the provider. `--archive` accepts an already downloaded official ZIP and applies the same digest verification.
+The runtime is already installed under the package's `native/1.4.3/win32-x64/` directory. Leave `runtimeDir` unset to use it. `dsh-antigravity-install` remains available for developers or an explicit custom runtime directory; normal installation of this release does not require it.
 
 Enabling the bundle registers one provider and the global `subagent_antigravity` tool. Enabling it alone starts no native process; delegation and the explicit authentication command do. Restart when DSH requests it. This package does not modify built-in Official catalog entries.
 
@@ -174,7 +170,7 @@ Cancellation settles locally and sends `session/cancel` best effort. Process cle
 
 ### Performance
 
-Native installation is performed once. Runtime resolution coalesces concurrent checks and verifies hashes on first use or metadata changes; later tasks reuse verified metadata. Stderr forwarding uses stream backpressure instead of synchronous file writes. Assistant text is accumulated in bounded chunks; thought and tool payloads are not retained. DSH's existing admission control governs concurrency. These changes reduce adapter overhead without changing the one-process-per-task architecture; no measured speedup is claimed.
+The complete bundle requires no runtime download or extraction at first use. Runtime resolution coalesces concurrent checks and verifies hashes on first use or metadata changes; later tasks reuse verified metadata. Stderr forwarding uses stream backpressure instead of synchronous file writes. Assistant text is accumulated in bounded chunks; thought and tool payloads are not retained. DSH's existing admission control governs concurrency. These changes reduce adapter overhead without changing the one-process-per-task architecture; no measured speedup is claimed.
 
 </details>
 
@@ -213,8 +209,9 @@ The parent sees the launch acknowledgment and eventual assistant result or safe 
 
 ```sh
 npm ci --ignore-scripts
-npm run build
-npm pack
+npm run pack:bundle
 ```
 
-The runtime installer is explicit; installing JS dependencies does not execute or download the native agent. The release includes compiled ESM and declarations. Preserve the upstream MIT notice. Protocol/configuration verification and TypeScript compilation are separate from model execution; no automated tests or inference smoke tests were run for this delivery.
+Run the release build on Windows x64. `pack:bundle` compiles the adapter, stages only the public package files, and installs a fresh, checksum-verified official runtime into that staging directory. It never copies an existing login home. Use `npm run pack:bundle -- --archive /absolute/path/to/official.zip` to reuse an official ZIP with the same digest verification. It emits a `win32-x64.tgz` and SHA-256 sidecar. Plain `npm pack` remains an adapter-only developer archive, not the complete release.
+
+Installing the release does not execute the native agent or run a download hook. The bundle includes the original Google binaries and their integrity record; the adapter includes compiled ESM and declarations. Preserve the upstream MIT notice and the runtime attribution in `NOTICE`; the adapter's MIT license does not relicense Google's runtime. Compilation and archive integrity checks are separate from model execution; no automated tests or inference smoke tests were run for this delivery.

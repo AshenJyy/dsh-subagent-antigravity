@@ -41,3 +41,11 @@ The following facts come from read-only inspection of Python source embedded in 
 - **Credential boundaries:** `paths.py` gives ACP a separate `antigravity-acp/` namespace beneath `GEMINI_HOME` or the native `.gemini` home. Changing that home also affects native settings, sessions, and shared MCP/skills/hooks discovery. `credential_store.py` uses separate personal and business file stores; macOS can instead use fixed Keychain accounts (`gemini` service, `antigravity-acp` and `antigravity-acp-business` accounts). Separate homes alone therefore do not ensure full credential isolation. The inspected wrapper has no App/`agy` token-import bridge; the adapter does not copy or convert those tokens.
 
 The added authentication CLI performs `initialize` and an optional explicit `authenticate` only. It creates no session and issues no model request. Its success must not be reported as verified credentials, quota, entitlement, or inference access. Selecting `native` performs no login validation. All new routes remain source-reviewed rather than live-login verified.
+
+## 0.2.1 Windows x64 packaging
+
+The complete Windows x64 release adds the original ACP 1.4.3 executable and matching native harness under `native/1.4.3/win32-x64/`, together with `.dsh-antigravity-runtime.json`. Its package manifest declares `os: ["win32"]` and `cpu: ["x64"]`.
+
+The release builder compiles TypeScript, verifies the official ZIP against the pinned registry SHA-256, extracts a fresh pair into a temporary package directory, and checks that both binaries and the installation record are present in the npm archive. The source ZIP digest remains `54c2e16378d9a4952e1da70e355f3c33c4f284308d6de48ab3e6e34a127bd325`. The published TGZ has its own SHA-256 sidecar.
+
+This is a packaging change. No login home, credentials, model settings, native session, or local configuration is copied. No new authentication, model execution, automated test, or inference smoke test is part of this release.

@@ -15,7 +15,7 @@ kind: "package-bundle"
 
 公开 Bundle **不限定模型或 effort**。省略配置时使用原生默认值；显式配置必须由 ACP 支持并回读确认。任何配置或执行失败都不会回退到其他模型、后端或宿主 CLI。
 
-**0.2.0** 默认沿用 ACP 自身的认证选择，也可显式选择每种原生登录路线。从 0.1.0 升级并希望保持 ADC 行为时，请设置 `authMethod: agent-platform` 与 `agentPlatformMode: adc`。
+**0.2.1** 的 Windows x64 完整发行包已内置固定版本原生运行时。认证方式仍可选择，默认沿用 ACP 已有选择。从 0.1.0 升级并希望保持 ADC 行为时，请设置 `authMethod: agent-platform` 与 `agentPlatformMode: adc`。
 
 ## 目录
 
@@ -30,14 +30,15 @@ kind: "package-bundle"
 
 ### 安装 Bundle
 
-从 [GitHub Releases](https://github.com/AshenJyy/dsh-subagent-antigravity/releases) 下载 `.tgz`，通过 DSH 插件页或 CLI 安装到实际使用的 Profile。请使用本仓库的发行包，避免与其他同名包混淆。
+从 [GitHub Releases](https://github.com/AshenJyy/dsh-subagent-antigravity/releases) 下载 **`ashenjyy-dsh-subagent-antigravity-0.2.1-win32-x64.tgz`**。这是 **Windows x64 完整包**，内含 ACP Server 1.4.3、配套原生 harness 及校验记录。通过 DSH 插件页或 CLI 安装到实际使用的 Profile 即可，无需再执行运行时安装命令，也无需下载运行时。
+
+完整包通过 `os`/`cpu` 限制防止误装到其他平台，仍需要 DSH 依赖和可用的认证配置，不包含账号或凭据。请使用本仓库的发行包，避免与其他同名包混淆。
 
 ```sh
 dsh plugin --profile web add /absolute/path/to/the-release-package.tgz
-node /absolute/path/to/installed/package/lib/install.js
 ```
 
-第二条命令是该安装包自带的原生载荷安装器：从 Google 下载固定版本，核对官方 SHA-256，将可执行文件和配套 harness 放到包内 `native/1.4.3/`。npm 包不重新分发 Google 二进制。可用 `--runtime-dir` 指定绝对目录，并在 Provider 配置相同路径；`--archive` 可安装已下载的官方 ZIP，同样必须通过摘要校验。
+运行时已放在包内 `native/1.4.3/win32-x64/`，省略 `runtimeDir` 即可直接使用。保留的 `dsh-antigravity-install` 命令供开发或显式自定义运行时目录使用；正常安装此发行包不需要运行它。
 
 启用后注册全局工具 `subagent_antigravity`。仅启用不会启动原生进程；委派任务或主动执行认证命令时才会启动。DSH 提示重启时请重启。本包不会改写内置 Official 目录。
 
@@ -167,7 +168,7 @@ Bundle 插入以下 Host 条目，所有预设均可看到工具：
 
 ### 性能
 
-载荷只安装一次。首次使用或文件元数据改变时计算摘要，后续使用缓存，并合并并发定位请求。stderr 通过带背压的流转发；助手文本分块、有界保留，丢弃不需要的推理和工具载荷。复用 DSH 并发准入，不新增重复调度队列。保留每任务独立进程，不承诺未经测量的提速倍数。
+完整包首次使用时无需下载或额外解压运行时。首次使用或文件元数据改变时计算摘要，后续使用缓存，并合并并发定位请求。stderr 通过带背压的流转发；助手文本分块、有界保留，丢弃不需要的推理和工具载荷。复用 DSH 并发准入，不新增重复调度队列。保留每任务独立进程，不承诺未经测量的提速倍数。
 
 </details>
 
@@ -206,8 +207,9 @@ Antigravity 在指定工作目录中获得独立、自包含文本任务，使�
 
 ```sh
 npm ci --ignore-scripts
-npm run build
-npm pack
+npm run pack:bundle
 ```
 
-发行包包含 ESM 与类型声明；安装 JS 依赖不会启动或下载原生 Agent。保留上游 MIT 归属。此次交付进行协议/配置核查与 TypeScript 编译，按要求没有编写或运行自动化测试，也没有执行模型推理冒烟测试。
+请在 Windows x64 构建此发行包。`pack:bundle` 编译适配器，只将公开文件清单复制到暂存目录，并解压一份通过官方摘要校验的全新运行时，不复制已有登录目录。可用 `npm run pack:bundle -- --archive /absolute/path/to/official.zip` 复用已下载的官方 ZIP，同样核对摘要。输出带 `win32-x64` 后缀的 TGZ 和 SHA-256 文件；直接 `npm pack` 仍生成仅含适配器的开发包，不是完整发行包。
+
+安装发行包不会启动原生 Agent 或执行下载钩子。完整包包含原样 Google 二进制和校验记录；适配器包含 ESM 与类型声明。保留上游 MIT 归属与 `NOTICE` 中的运行时声明，适配器的 MIT 许可不覆盖 Google 运行时。此次交付仅编译和核对归档内容、摘要，按要求没有编写或运行自动化测试，也没有执行模型推理冒烟测试。

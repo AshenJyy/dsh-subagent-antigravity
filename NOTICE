@@ -12,5 +12,14 @@ Upstream license: MIT; retained in LICENSE.
 
 Antigravity and Google are trademarks of their respective owners. This is an
 independent integration, not an official DeepSeek or Google package. The
-Antigravity runtime is obtained separately from its official distribution;
-this package's MIT license does not relicense that runtime.
+Windows x64 release bundle includes the unmodified official Antigravity
+ACP Server and matching native harness.
+The adapter source is MIT-licensed; this license does not relicense Google's
+runtime or its embedded third-party components. Google's applicable terms and
+the runtime's embedded notices continue to apply to those components.
+
+Official runtime source: https://dl.google.com/agy-extensions/releases
+Version: 1.4.3
+Pinned registry: https://github.com/agentclientprotocol/registry/blob/06229c691d24d039e2363ba12abe5c9dfae5bc66/antigravity-acp/agent.json
+The included native/1.4.3/<platform>/.dsh-antigravity-runtime.json record
+identifies the official archive and executable hashes.

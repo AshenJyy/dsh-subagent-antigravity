@@ -1,6 +1,6 @@
 {
   "name": "@ashenjyy/dsh-subagent-antigravity",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "One-shot native Antigravity subagents for DeepSeek Harness with optional model and effort configuration",
   "license": "MIT",
   "type": "module",
@@ -28,6 +28,7 @@
     "NOTICE",
     "README.zh.md",
     "docs/",
+    "scripts/",
     "src/",
     "tsconfig.json"
   ],
@@ -42,7 +43,8 @@
   },
   "scripts": {
     "build": "tsc",
-    "prepack": "npm run build"
+    "prepack": "npm run build",
+    "pack:bundle": "node scripts/pack.mjs"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "~4.0.5",
