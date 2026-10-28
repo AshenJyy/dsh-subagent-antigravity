@@ -1,0 +1,10 @@
+node_modules/
+native/
+*.tgz
+*.zip
+*.install.lock
+.env
+.env.*
+credentials*
+application_default_credentials.json
+local-argon/

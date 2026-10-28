@@ -1,0 +1,12 @@
+- insert:
+    - id: subagent-antigravity
+      name: '@ashenjyy/dsh-subagent-antigravity'
+      config:
+        providerName: antigravity
+        gcpLocation: global
+    - id: tool-subagent-antigravity
+      name: '@deepseek-ai/dsh-tool-subagent'
+      config:
+        provider: antigravity
+        toolName: subagent_antigravity
+        maxDepth: provider-managed

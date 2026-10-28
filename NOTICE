@@ -1,0 +1,16 @@
+dsh-subagent-antigravity
+
+This project adapts the provider, process-lifecycle and protocol integration
+patterns of DeepSeek Harness, including @deepseek-ai/dsh-subagent-codex and
+@deepseek-ai/dsh-subagent-acp.
+
+Upstream: https://github.com/deepseek-ai/deepseek-harness
+Reference release: dsh-v0.2.1-rc.3
+Reference commit: 1f81c047fc48fa190a683e469daa699857e9afe8
+Upstream copyright: Copyright (c) 2026 DeepSeek
+Upstream license: MIT; retained in LICENSE.
+
+Antigravity and Google are trademarks of their respective owners. This is an
+independent integration, not an official DeepSeek or Google package. The
+Antigravity runtime is obtained separately from its official distribution;
+this package's MIT license does not relicense that runtime.

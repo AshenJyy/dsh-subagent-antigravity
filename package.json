@@ -1,0 +1,74 @@
+{
+  "name": "@ashenjyy/dsh-subagent-antigravity",
+  "version": "0.1.0",
+  "description": "One-shot native Antigravity subagents for DeepSeek Harness with optional model and effort configuration",
+  "license": "MIT",
+  "type": "module",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "bin": {
+    "dsh-antigravity-install": "./lib/install.js"
+  },
+  "files": [
+    "lib/",
+    "locale/",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE",
+    "NOTICE",
+    "README.zh.md",
+    "docs/",
+    "src/",
+    "tsconfig.json"
+  ],
+  "engines": {
+    "node": ">=22.0.0",
+    "dsh": "0.2.1-rc.3"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepack": "npm run build"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "~4.0.5",
+    "@deepseek-ai/dsh-llm": "0.2.1-rc.3",
+    "@deepseek-ai/dsh-session": "0.2.1-rc.3",
+    "@deepseek-ai/dsh-subagent": "0.2.1-rc.3",
+    "@deepseek-ai/dsh-subprocess": "0.2.1-rc.3",
+    "@deepseek-ai/dsh-timeout": "0.2.1-rc.3"
+  },
+  "dependencies": {
+    "@deepseek-ai/dsh-brand": "0.2.1-rc.3",
+    "@deepseek-ai/dsh-sdk-protocol": "0.2.1-rc.3",
+    "@deepseek-ai/dsh-tool-subagent": "0.2.1-rc.3",
+    "@deepseek-ai/schemastery": "~3.18.5",
+    "yauzl": "3.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.30",
+    "@types/yauzl": "2.10.3",
+    "typescript": "5.9.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AshenJyy/dsh-subagent-antigravity.git"
+  },
+  "homepage": "https://github.com/AshenJyy/dsh-subagent-antigravity#readme",
+  "bugs": {
+    "url": "https://github.com/AshenJyy/dsh-subagent-antigravity/issues"
+  }
+}
