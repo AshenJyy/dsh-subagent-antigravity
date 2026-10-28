@@ -7,9 +7,14 @@
 import type { Readable, Writable } from 'node:stream';
 import type { ContentBlock } from '@deepseek-ai/dsh-llm';
 import type { SubagentResult } from '@deepseek-ai/dsh-subagent';
+import { type AuthMethod } from './auth.js';
 import { type ModelPolicy } from './model-policy.js';
 export type { Effort } from './model-policy.js';
 export interface AntigravityWireOptions extends ModelPolicy {
+    /** Native inheritance skips authenticate and lets session/new resolve state. */
+    readonly authMethod?: AuthMethod;
+    /** Computed from the child's actual environment, never the host's environment. */
+    readonly gatewayAuthEnabled?: boolean;
     readonly disabledTools?: readonly string[];
     readonly permissionMode: 'deny' | 'allow-once';
     readonly maxOutputBytes: number;

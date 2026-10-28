@@ -1,6 +1,6 @@
 # ACP verification record
 
-Observed on Windows x64, 2026-10-28. These were native protocol/configuration operations, not automated tests or model tasks.
+The 0.1.0 observations below were made on Windows x64, 2026-10-28. These were native protocol/configuration operations, not automated tests or model tasks. The 0.2.0 authentication expansion was reviewed against the pinned runtime's source; its additional login routes were not exercised.
 
 ## Baselines
 
@@ -9,7 +9,7 @@ Observed on Windows x64, 2026-10-28. These were native protocol/configuration op
 - Windows archive SHA-256: `54c2e16378d9a4952e1da70e355f3c33c4f284308d6de48ab3e6e34a127bd325`.
 - Official archive contained `agy_acp_server.exe` and `localharness_external.exe`; the archive digest was verified before launching.
 
-## Observed operations
+## 0.1.0 observed operations
 
 1. `initialize` returned ACP `protocolVersion: 1`, agent name `antigravity-acp`, version `1.4.3`.
 2. A session without authentication returned `Authentication required`.
@@ -27,3 +27,17 @@ The Agent Platform model catalogue is generated locally by the native runtime. S
 Source inspection of the pinned native wrapper confirmed that it discovers shared MCP/skills/hooks and supports `session/new._meta.antigravity.disabledTools`. That private extension is tied to the pinned runtime. The public bundle does not send a disabled-tool list by default.
 
 The adapter preserves the DSH subprocess and asynchronous activation contracts. TypeScript compilation is the build check; no automated tests were requested or run.
+
+## 0.2.0 authentication source review
+
+The following facts come from read-only inspection of Python source embedded in the same [official Windows 1.4.3 archive](https://dl.google.com/agy-extensions/releases/windows/agy-acp-server-1.4.3-windows-x86_64.zip), whose SHA-256 is recorded above. Source references below are relative to the embedded `google3/cloud/developer_experience/antigravity_extensions/acp_server/` directory. No additional authentication, credential inspection, session prompt, or test was performed for this review.
+
+- **Methods:** `server.py` advertises `oauth-personal`, `oauth-business`, `gemini-api-key`, and `agent-platform`. `gateway` is conditional on client capability, the `AGY_ACP_ENABLE_GATEWAY_AUTH` switch, and administrator policy. Explicit gateway selection in this adapter enables the capability and switch while retaining administrator restrictions. `native` is an adapter option, not an ACP method ID: it omits `authenticate` and lets native policy and saved `auth.type` determine the route. Providing a key alone does not choose a method.
+- **Personal and Enterprise OAuth:** `server.py`, `credential_manager.py`, and `business_auth.py` reuse or refresh native cached credentials when possible, otherwise opening a loopback browser login. Enterprise login can also require license selection. Both explicit `authenticate` and the authentication check during `session/new` can trigger these interactions. No supported protocol method or runtime switch was found for cached-only login or prohibiting the browser. The native callback wait is 300 seconds; the adapter's configured startup deadline can expire sooner.
+- **Gemini API key:** the native method reads `GEMINI_API_KEY`. Native `authenticate` can return success even without a usable key, and does not prove an inference request would succeed. The adapter uses environment configuration instead of a plaintext key CLI argument.
+- **Agent Platform:** `server.py` selects Express when `GOOGLE_API_KEY` is present, otherwise using ADC with project and location from the environment or native settings. Native authentication checks configuration, not ADC validity. The adapter's `agentPlatformMode` can preserve native selection or explicitly require `adc` or `api-key`. ADC acquisition remains a separate Google Cloud authentication operation. Enterprise OAuth project/license selection uses its saved ACP settings and picker, not the Agent Platform environment overrides.
+- **Gateway:** `gateway/resolution.py` applies administrator configuration before client metadata and environment values. A forced gateway can make `initialize.authMethods` empty; this is not proof that authentication is valid. `native` allows the runtime to apply that policy without selecting another method. Explicit gateway selection cannot bypass administrator restrictions. The pinned implementation uses the Google/genai protocol.
+- **Settings and concurrency:** successful explicit non-gateway authentication writes `auth.type` to native settings. `settings_writer.py` uses a temporary file and atomic replacement, but concurrent writers are last-write-wins. The adapter does not temporarily rewrite and restore settings around a task. Separate persistent `geminiHome` directories avoid conflicting method settings across provider instances.
+- **Credential boundaries:** `paths.py` gives ACP a separate `antigravity-acp/` namespace beneath `GEMINI_HOME` or the native `.gemini` home. Changing that home also affects native settings, sessions, and shared MCP/skills/hooks discovery. `credential_store.py` uses separate personal and business file stores; macOS can instead use fixed Keychain accounts (`gemini` service, `antigravity-acp` and `antigravity-acp-business` accounts). Separate homes alone therefore do not ensure full credential isolation. The inspected wrapper has no App/`agy` token-import bridge; the adapter does not copy or convert those tokens.
+
+The added authentication CLI performs `initialize` and an optional explicit `authenticate` only. It creates no session and issues no model request. Its success must not be reported as verified credentials, quota, entitlement, or inference access. Selecting `native` performs no login validation. All new routes remain source-reviewed rather than live-login verified.

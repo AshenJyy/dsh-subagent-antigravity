@@ -1,5 +1,5 @@
 ---
-description: "A one-shot native Antigravity subagent provider for DeepSeek Harness users choosing a product backend or configuring unattended delegation."
+description: "A one-shot native Antigravity subagent provider for DeepSeek Harness, with selectable native authentication, model, and effort."
 kind: "package-bundle"
 ---
 
@@ -14,6 +14,8 @@ Install this bundle into a DeepSeek Harness **0.2.1-rc.3** Profile when delegate
 The implementation follows the official [`@deepseek-ai/dsh-subagent-codex`](https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.1-rc.3/packages/subagent/subagent-codex) provider's architecture. This is a community package, not an official DeepSeek or Google integration. It does not wrap `agy --print`, automate the Antigravity App, or run a model inside DSH's agent loop.
 
 No model or reasoning effort is restricted by the public bundle. Omitted model settings retain native defaults. Explicit settings must be supported by the ACP runtime and successfully read back; there is no fallback to another model, backend, or host executable.
+
+Version **0.2.0** defaults to the ACP runtime's own authentication selection and supports explicitly selecting each native login route. Users upgrading from 0.1.0 who want its ADC behavior should set `authMethod: agent-platform` and `agentPlatformMode: adc`.
 
 ## Contents
 
@@ -44,33 +46,61 @@ node /absolute/path/to/installed/package/lib/install.js
 
 It downloads the pinned Google payload for the current platform, verifies the official registry SHA-256, and installs the executable and matching harness under the package's `native/1.4.3/` directory. Native binaries are not redistributed in the npm archive. An alternative absolute directory can be supplied with `--runtime-dir`; configure the same directory in the provider. `--archive` accepts an already downloaded official ZIP and applies the same digest verification.
 
-Enabling the bundle registers one provider and the global `subagent_antigravity` tool. No native process starts until a task is delegated. Restart when DSH requests it. This package does not modify built-in Official catalog entries.
+Enabling the bundle registers one provider and the global `subagent_antigravity` tool. Enabling it alone starts no native process; delegation and the explicit authentication command do. Restart when DSH requests it. This package does not modify built-in Official catalog entries.
 
 ### Authentication
 
-This release supports **Gemini Enterprise Agent Platform with Application Default Credentials (ADC)**. Configure a Google Cloud project and location, and establish ADC on the machine running DSH:
+Choose authentication per provider instance. The default, `native`, leaves selection to ACP's existing settings and enterprise policy. It does not send an `authenticate` request or try methods in sequence. An explicit method must be available under the runtime's policy; failure does not select another account or route.
+
+| `authMethod` | Native behavior and setup |
+|---|---|
+| `native` | Reuse ACP's existing authentication selection, OAuth cache, and applicable enterprise policy |
+| `oauth-personal` | Google personal-account OAuth; native browser login when required |
+| `oauth-business` | Gemini Enterprise OAuth and native license selection |
+| `gemini-api-key` | Gemini Developer API using `GEMINI_API_KEY` |
+| `agent-platform` | Gemini Enterprise Agent Platform using ADC or Express `GOOGLE_API_KEY`, as controlled by `agentPlatformMode` |
+| `gateway` | Native Google-compatible enterprise gateway, subject to administrator policy |
+
+For an initial OAuth login or an intentional change of method, run the installed package's authentication command before delegating:
+
+```sh
+dsh-antigravity-auth --method oauth-personal --gemini-home /absolute/path/to/your-acp-home
+```
+
+If the package's bin directory is not on your PATH, use `node /absolute/path/to/installed/package/lib/auth-cli.js` with the same arguments. Use the same `geminiHome` in the provider. Omit both settings to use the native home. The command accepts `--runtime-dir`, `--gemini-home`, `--project`, `--location`, `--adc-path`, `--agent-platform-mode`, and `--timeout-ms`; paths must be absolute. Its overall deadline defaults to 600000 ms, independently of the provider's startup deadline. It accepts no plaintext API-key argument. Supply keys through the selected native environment, and do not commit secrets to a Profile patch or repository.
+
+The command performs only `initialize` and, for an explicit method, `authenticate`; it creates no session and sends no prompt. A successful command is **not** proof of a usable API key, ADC, account entitlement, quota, or inference access. In `native` mode it does not validate the inherited login. ACP 1.4.3 has no supported cached-only or no-browser authentication mode: expired or missing OAuth credentials can open the native browser flow during delegation as well, subject to `startupTimeoutMs`. Complete initial login interactively, and treat later reauthentication as a possible startup failure or interaction.
+
+ACP has its own settings and credentials. An App or `agy` login is not guaranteed to be available to ACP; this package does not copy or convert their tokens. `geminiHome` supplies `GEMINI_HOME`, the persistent native home directory itself, with ACP settings under `antigravity-acp/`. It also changes native configuration, session storage, and discovery of shared MCP, skills, and hooks; it is more than a token path. Explicit non-gateway authentication persists `auth.type` there, and Enterprise license selection can update project/location. Use separate persistent homes for provider instances that select different methods to avoid competing settings writes. On macOS the native Keychain accounts may still be shared, so separate homes alone do not guarantee complete credential isolation.
+
+**Agent Platform:** `agentPlatformMode: native` follows Google's choice: a nonempty `GOOGLE_API_KEY` selects Express; otherwise ADC requires a project and location from its environment or saved native settings. Choose `adc` to remove that key override, or `api-key` to require the key and fail if it is absent. These modes apply only to explicit `authMethod: agent-platform`. To establish ADC on the machine running DSH:
 
 ```sh
 gcloud auth application-default login
 gcloud auth application-default set-quota-project YOUR_PROJECT_ID
 ```
 
-Use `adcPath` when DSH cannot discover the standard ADC file, or when the login was performed inside an application with redirected user directories. The provider forwards the path without reading or copying the credential contents. Native Google authentication and project permissions remain authoritative.
+Configure `gcpProject` and `gcpLocation` for Agent Platform ADC when native settings do not already supply them. Use `adcPath` when DSH cannot discover the standard ADC file. The provider forwards the path without reading or copying credential contents; ACP authentication itself does not perform `gcloud` login. Enterprise OAuth uses its native license picker and saved ACP project/location instead of these Agent Platform overrides.
 
-The ACP `authenticate` response and model list do **not** prove ADC validity, project entitlement, quota, or inference access. Google Cloud reports those failures during native execution. The package never changes billing settings, enables APIs, creates subscriptions, or switches to an API key on failure. Ambient Google API keys and enterprise-gateway overrides are removed from the child environment to preserve the selected ADC route.
+**Gateway:** explicit selection enables the native gateway capability. Supply a supported configuration, normally `AGY_LLM_GATEWAY_URL` with the applicable `AGY_LLM_GATEWAY_API_KEY` or `AGY_LLM_GATEWAY_HEADERS`. Gateway authentication does not persist `auth.type`, so configure `authMethod: gateway` for subsequent delegations. Native administrator policy remains authoritative; an administrator-forced gateway can also be inherited through `native`. Providing a key or gateway URL alone does not select its authentication method.
+
+DSH scrubs its child environment. Selected explicit routes forward their necessary native variables; `native` does not promise to inherit every sensitive shell variable. Use provider `env` for an explicit deployment environment when needed. Native execution remains responsible for authorization and account charges. The package does not enable billing, APIs, or subscriptions.
 
 ### Configuration
 
 | Field | Default | Meaning |
 |---|---|---|
 | `providerName` | `antigravity` | Unique registration name on `ctx.subagents` |
+| `authMethod` | `native` | Inherit native selection, or explicitly select a method listed above |
+| `agentPlatformMode` | `native` | For explicit `agent-platform`: native selection, `adc`, or `api-key` |
+| `geminiHome` | Native home | Optional absolute, persistent native home directory |
 | `model` | Native default | Optional exact ACP `model` configuration value |
 | `effort` | Native default | Optional exact ACP `thinking_level` value |
 | `allowedModels` | Unrestricted | Optional deployment allowlist of ACP model-family values |
 | `allowedEfforts` | Unrestricted | Optional deployment allowlist of reasoning values |
 | `disabledTools` | Native defaults | Optional native tool IDs disabled for the session |
-| `gcpProject` | `GOOGLE_CLOUD_PROJECT` | Agent Platform project; explicit configuration takes precedence |
-| `gcpLocation` | `global` | Agent Platform location supported by the selected model |
+| `gcpProject` | Native environment/settings | Optional Agent Platform project override; not required by all login methods |
+| `gcpLocation` | Native environment/settings | Optional Agent Platform location override |
 | `adcPath` | Native ADC discovery | Optional absolute ADC file path |
 | `runtimeDir` | Package-local installation | Optional absolute directory containing the installed native pair |
 | `permissionMode` | `deny` | `deny`, or `allow-once` for supported ordinary tool approvals |
@@ -100,7 +130,7 @@ The bundle inserts these Host rows, making the tool available to all presets, in
         maxDepth: provider-managed
 ```
 
-Configure the provider row with your project before the first delegation. Preserve `maxDepth: provider-managed`: this external provider does not implement DSH-enforced depth, output schemas, agent presets, or agent options.
+Configure the provider's authentication and optional model settings before the first delegation. A Cloud project is not a universal login requirement. Preserve `maxDepth: provider-managed`: this external provider does not implement DSH-enforced depth, output schemas, agent presets, or agent options.
 
 ### What you get
 
@@ -127,6 +157,8 @@ Missing native payloads, unavailable model choices, mismatched readback, authent
 | File | Responsibility |
 |---|---|
 | [`src/index.ts`](src/index.ts) | Configuration schema and provider registration |
+| [`src/auth.ts`](src/auth.ts) | Native authentication selection and method-specific environment |
+| [`src/auth-cli.ts`](src/auth-cli.ts) | Explicit native authentication command without a session or prompt |
 | [`src/run.ts`](src/run.ts) | Managed subprocess, startup, cancellation, result settlement, teardown |
 | [`src/wire.ts`](src/wire.ts) | Minimal ACP v1 adapter over DSH's shared JSON-RPC line transport |
 | [`src/model-policy.ts`](src/model-policy.ts) | Advertised choices, exact selection, optional local policy |
@@ -136,7 +168,7 @@ Missing native payloads, unavailable model choices, mismatched readback, authent
 
 ### Run flow
 
-Resolve the installed native pair → spawn through `ctx.subprocess` → validate `antigravity-acp`, version `1.4.3`, ACP v1 → select Agent Platform authentication → create a fresh session → set and verify configured model/effort → publish the run → send one text prompt → collect the authoritative ACP terminal result → close stdin and wait → escalate managed-range termination when necessary → notify the parent after cleanup.
+Resolve the installed native pair → spawn through `ctx.subprocess` → validate `antigravity-acp`, version `1.4.3`, ACP v1 → retain native authentication or select the configured method → create a fresh session → set and verify configured model/effort → publish the run → send one text prompt → collect the authoritative ACP terminal result → close stdin and wait → escalate managed-range termination when necessary → notify the parent after cleanup.
 
 Cancellation settles locally and sends `session/cancel` best effort. Process cleanup waits for the entire managed range, including descendants. Early exit never becomes successful completion. Successful empty answers and unknown terminal reasons are errors.
 
@@ -158,7 +190,7 @@ Native installation is performed once. Runtime resolution coalesces concurrent c
 
 ### Child request
 
-Antigravity receives the self-contained text task in the selected working directory. It has its own context and native tools. The provider does not inherit the parent conversation, supply DSH tools to the child, or create a separate Git worktree. Native model requests and their costs belong to the selected Google Cloud project and account configuration.
+Antigravity receives the self-contained text task in the selected working directory. It has its own context and native tools. The provider does not inherit the parent conversation, supply DSH tools to the child, or create a separate Git worktree. Native model requests and their costs follow the selected account, project, or gateway configuration.
 
 ### Parent scheduling and result
 
@@ -167,11 +199,12 @@ The parent sees the launch acknowledgment and eventual assistant result or safe 
 ## Known limitations and deferred work
 
 - **Exact compatibility baseline:** DSH `0.2.1-rc.3`, ACP runtime `1.4.3`, ACP protocol v1. Other releases require a deliberate compatibility update.
-- **ADC route only in this release:** Personal OAuth, Enterprise license login, API-key, and enterprise-gateway flows are not selected by this provider.
+- **Authentication evidence:** All advertised native routes are represented in configuration, but the added 0.2.0 flows were checked against source only. They were not each logged in or exercised with inference. Account and enterprise policy may make a method unavailable.
+- **OAuth can require interaction:** First login or reauthentication can open a browser. The authentication command does not make later tasks strictly noninteractive.
 - **Fresh is not ephemeral:** ACP can persist its own sessions. The adapter does not resume them, but does not claim Codex's `ephemeral: true` guarantee or erase native records.
 - **App plugins are not automatically inherited:** ACP 1.4.3 discovers shared MCP, skills, and hooks. It is a separate backend, not an attached App session; App-only plugin packages and UI features may be unavailable.
 - **Local allowlists govern this adapter's selections:** Hooks, MCP servers, plugins, and Google's closed runtime can perform their own work. The adapter cannot attest that every internal or external auxiliary operation uses the selected model. Strict deployments should additionally control native hooks/plugins, tools, and server-side model access.
-- **No human interaction:** Questions and unsupported client requests cannot be answered. Slash-command prompts are rejected instead of being interpreted as model or mode changes.
+- **No task-question UI:** Agent questions and unsupported client requests cannot be answered. Slash-command prompts are rejected instead of being interpreted as model or mode changes. Native authentication browser flows are separate from these task questions.
 - **Text only, one turn:** Non-text blocks are rejected; no follow-up, structured output, live DSH progress transcript, automatic retries, or side-effect rollback.
 - **No task execution deadline:** The startup deadline does not limit a running task. DSH cancellation remains the stop mechanism.
 - **Platform evidence:** Windows x64 startup and non-inference configuration were observed. Other pinned platform downloads are listed by the official registry but were not exercised here.

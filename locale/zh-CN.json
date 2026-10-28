@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Antigravity 子智能体",
-    "description": "将独立任务委派给原生 Antigravity，使用原生默认值或配置的模型与思考强度。"
+    "description": "将独立任务委派给原生 Antigravity，可选择原生认证方式、模型与思考强度。"
   }
 }

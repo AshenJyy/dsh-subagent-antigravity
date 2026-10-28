@@ -1,15 +1,13 @@
 import { type SubagentRun, type SubagentStartRequest, type SubagentStopReason } from '@deepseek-ai/dsh-subagent';
-import type { SubprocessHandle, SubprocessSpawnSpec } from '@deepseek-ai/dsh-subprocess';
-export interface AntigravityRunSpec {
+import { type SubprocessHandle, type SubprocessSpawnSpec } from '@deepseek-ai/dsh-subprocess';
+import { type AuthenticationConfig } from './auth.js';
+export interface AntigravityRunSpec extends AuthenticationConfig {
     cwd: string;
     model?: string;
     effort?: string;
     allowedModels?: readonly string[];
     allowedEfforts?: readonly string[];
     disabledTools?: readonly string[];
-    gcpProject: string;
-    gcpLocation: string;
-    adcPath?: string;
     runtimeDir?: string;
     permissionMode: 'deny' | 'allow-once';
     env: Record<string, string>;

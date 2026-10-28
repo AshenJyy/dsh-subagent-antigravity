@@ -1,6 +1,6 @@
 {
   "name": "@ashenjyy/dsh-subagent-antigravity",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "One-shot native Antigravity subagents for DeepSeek Harness with optional model and effort configuration",
   "license": "MIT",
   "type": "module",
@@ -16,7 +16,8 @@
     "./locale/*.json": "./locale/*.json"
   },
   "bin": {
-    "dsh-antigravity-install": "./lib/install.js"
+    "dsh-antigravity-install": "./lib/install.js",
+    "dsh-antigravity-auth": "./lib/auth-cli.js"
   },
   "files": [
     "lib/",

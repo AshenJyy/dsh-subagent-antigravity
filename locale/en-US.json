@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Antigravity subagents",
-    "description": "Delegate one task to native Antigravity using its defaults or configured model and effort."
+    "description": "Delegate one task to native Antigravity with selectable native authentication, model, and effort."
   }
 }

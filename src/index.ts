@@ -17,6 +17,10 @@ import {
   type SubagentRun,
 } from '@deepseek-ai/dsh-subagent'
 import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
+import {
+  AUTH_METHODS, resolveAuthMethod, resolveAgentPlatformMode,
+  type AuthenticationConfig,
+} from './auth.js'
 import { startAntigravityRun, type AntigravityRunSpec } from './run.js'
 
 export const name = 'subagent-antigravity'
@@ -25,8 +29,8 @@ export const inject = ['subagents', 'subprocess']
 export type AntigravityEffort = string
 export type AntigravityPermissionMode = 'deny' | 'allow-once'
 
-/** Deployment configuration for the native Agent Platform runtime. */
-export interface Config {
+/** Deployment configuration for the native Antigravity runtime. */
+export interface Config extends AuthenticationConfig {
   /** Defaults to antigravity. Multiple configured provider instances may coexist. */
   providerName?: string
   /** Native model identifier; omitted leaves the runtime's default in effect. */
@@ -39,16 +43,9 @@ export interface Config {
   allowedEfforts?: string[]
   /** Optional native tool identifiers disabled for this provider's sessions. */
   disabledTools?: string[]
-  /** Omission falls back to the explicit or ambient GOOGLE_CLOUD_PROJECT. */
-  gcpProject?: string
-  gcpLocation?: string
-  /** Absolute ADC file path explicitly forwarded to the child. */
-  adcPath?: string
   /** Absolute installation directory prepared by dsh-antigravity-install. */
   runtimeDir?: string
   permissionMode?: AntigravityPermissionMode
-  /** Explicit entries layered over the subprocess service's scrubbed environment. */
-  env?: Record<string, string>
   disposeGraceMs?: number
   disposeEofGraceMs?: number
   startupTimeoutMs?: number
@@ -57,13 +54,16 @@ export interface Config {
 
 export const Config: z<Config> = z.object({
   providerName: z.string().min(1).default('antigravity'),
+  authMethod: z.union(AUTH_METHODS).default('native'),
+  agentPlatformMode: z.union(['native', 'adc', 'api-key'] as const).default('native'),
+  geminiHome: z.string().min(1),
   model: z.string().min(1),
   effort: z.string().min(1),
   allowedModels: (z.array(z.string().min(1)).min(1) as z<string[] | undefined>).default(undefined),
   allowedEfforts: (z.array(z.string().min(1)).min(1) as z<string[] | undefined>).default(undefined),
   disabledTools: (z.array(z.string().min(1)) as z<string[] | undefined>).default(undefined),
   gcpProject: z.string().min(1),
-  gcpLocation: z.string().min(1).default('global'),
+  gcpLocation: z.string().min(1),
   adcPath: z.string().min(1),
   runtimeDir: z.string().min(1),
   permissionMode: z.union(['deny', 'allow-once'] as const).default('deny'),
@@ -75,7 +75,7 @@ export const Config: z<Config> = z.object({
 })
 
 type OptionalConfigFields = 'model' | 'effort' | 'allowedModels' | 'allowedEfforts'
-  | 'disabledTools' | 'gcpProject' | 'adcPath' | 'runtimeDir'
+  | 'disabledTools' | 'gcpProject' | 'gcpLocation' | 'adcPath' | 'geminiHome' | 'runtimeDir'
 type ResolvedConfig = Required<Omit<Config, OptionalConfigFields>>
   & Pick<Config, OptionalConfigFields>
 
@@ -123,13 +123,16 @@ function resolveConfig(config: Config): ResolvedConfig {
   }
   const resolved: ResolvedConfig = {
     providerName: optionalText(config.providerName, 'providerName') ?? 'antigravity',
+    authMethod: resolveAuthMethod(config.authMethod),
+    agentPlatformMode: resolveAgentPlatformMode(config.agentPlatformMode),
+    geminiHome: optionalAbsolutePath(config.geminiHome, 'geminiHome'),
     model: optionalText(config.model, 'model'),
     effort: optionalText(config.effort, 'effort'),
     allowedModels: optionalList(config.allowedModels, 'allowedModels'),
     allowedEfforts: optionalList(config.allowedEfforts, 'allowedEfforts'),
     disabledTools: optionalList(config.disabledTools, 'disabledTools', true),
     gcpProject: optionalText(config.gcpProject, 'gcpProject'),
-    gcpLocation: optionalText(config.gcpLocation, 'gcpLocation') ?? 'global',
+    gcpLocation: optionalText(config.gcpLocation, 'gcpLocation'),
     adcPath: optionalAbsolutePath(config.adcPath, 'adcPath'),
     runtimeDir: optionalAbsolutePath(config.runtimeDir, 'runtimeDir'),
     permissionMode,
@@ -138,6 +141,9 @@ function resolveConfig(config: Config): ResolvedConfig {
     disposeEofGraceMs: config.disposeEofGraceMs ?? 1_000,
     startupTimeoutMs: config.startupTimeoutMs ?? 90_000,
     maxOutputBytes: config.maxOutputBytes ?? 8 * 1024 * 1024,
+  }
+  if (resolved.authMethod !== 'agent-platform' && resolved.agentPlatformMode !== 'native') {
+    throw new Error('subagent-antigravity: adc or api-key agentPlatformMode requires authMethod=agent-platform')
   }
   for (const field of ['disposeGraceMs', 'disposeEofGraceMs', 'startupTimeoutMs'] as const) {
     assertPositiveFinite('subagent-antigravity', field, resolved[field])
@@ -169,28 +175,22 @@ class AntigravityProvider implements SubagentProvider {
     } catch (cause: unknown) {
       throw new Error('subagent-antigravity: child working directory is unavailable', { cause })
     }
-    const gcpProject = this.config.gcpProject
-      ?? this.config.env.GOOGLE_CLOUD_PROJECT?.trim()
-      ?? process.env.GOOGLE_CLOUD_PROJECT?.trim()
-    if (!gcpProject) {
-      throw new Error('subagent-antigravity: configure gcpProject or GOOGLE_CLOUD_PROJECT before delegation')
-    }
     const spec: AntigravityRunSpec = {
       cwd,
+      authMethod: this.config.authMethod,
+      agentPlatformMode: this.config.agentPlatformMode,
+      ...(this.config.geminiHome === undefined ? {} : { geminiHome: this.config.geminiHome }),
       ...(this.config.model === undefined ? {} : { model: this.config.model }),
       ...(this.config.effort === undefined ? {} : { effort: this.config.effort }),
       ...(this.config.allowedModels === undefined ? {} : { allowedModels: [...this.config.allowedModels] }),
       ...(this.config.allowedEfforts === undefined ? {} : { allowedEfforts: [...this.config.allowedEfforts] }),
       ...(this.config.disabledTools === undefined ? {} : { disabledTools: [...this.config.disabledTools] }),
-      gcpProject,
-      gcpLocation: this.config.gcpLocation,
+      ...(this.config.gcpProject === undefined ? {} : { gcpProject: this.config.gcpProject }),
+      ...(this.config.gcpLocation === undefined ? {} : { gcpLocation: this.config.gcpLocation }),
       ...(this.config.adcPath === undefined ? {} : { adcPath: this.config.adcPath }),
       ...(this.config.runtimeDir === undefined ? {} : { runtimeDir: this.config.runtimeDir }),
       permissionMode: this.config.permissionMode,
-      env: {
-        ...this.config.env,
-        ...(this.config.adcPath === undefined ? {} : { GOOGLE_APPLICATION_CREDENTIALS: this.config.adcPath }),
-      },
+      env: { ...this.config.env },
       disposeGraceMs: this.config.disposeGraceMs,
       disposeEofGraceMs: this.config.disposeEofGraceMs,
       startupTimeoutMs: this.config.startupTimeoutMs,

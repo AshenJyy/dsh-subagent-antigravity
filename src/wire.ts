@@ -9,6 +9,7 @@ import type { Readable, Writable } from 'node:stream'
 import type { ContentBlock } from '@deepseek-ai/dsh-llm'
 import type { SubagentResult } from '@deepseek-ai/dsh-subagent'
 import { JsonRpcLineTransport } from '@deepseek-ai/dsh-sdk-protocol'
+import { AUTH_METHODS, type AuthMethod } from './auth.js'
 import {
   ACP_AGENT_NAME,
   ACP_AGENT_VERSION,
@@ -29,6 +30,10 @@ export type { Effort } from './model-policy.js'
 type JsonObject = Record<string, unknown>
 
 export interface AntigravityWireOptions extends ModelPolicy {
+  /** Native inheritance skips authenticate and lets session/new resolve state. */
+  readonly authMethod?: AuthMethod
+  /** Computed from the child's actual environment, never the host's environment. */
+  readonly gatewayAuthEnabled?: boolean
   readonly disabledTools?: readonly string[]
   readonly permissionMode: 'deny' | 'allow-once'
   readonly maxOutputBytes: number
@@ -81,6 +86,8 @@ export class AntigravityWire {
       || (options.effort !== undefined && !validChoice(options.effort))
       || !validChoices(options.allowedModels) || !validChoices(options.allowedEfforts)
       || !validChoices(options.disabledTools)
+      || !AUTH_METHODS.includes(options.authMethod ?? 'native')
+      || (options.gatewayAuthEnabled !== undefined && typeof options.gatewayAuthEnabled !== 'boolean')
       || (options.permissionMode !== 'deny' && options.permissionMode !== 'allow-once')
       || !Number.isSafeInteger(options.maxOutputBytes) || options.maxOutputBytes < 1) {
       throw new AntigravityProtocolError('invalid wire options')
@@ -116,9 +123,10 @@ export class AntigravityWire {
 
   async initialize(signal: AbortSignal): Promise<void> {
     if (this.initialized) throw new AntigravityProtocolError('connection already initialized')
+    const authMethod = this.options.authMethod ?? 'native'
     const response = record(await this.request('initialize', {
       protocolVersion: 1,
-      clientCapabilities: {},
+      clientCapabilities: authMethod === 'gateway' ? { auth: { _meta: { gateway: true } } } : {},
       clientInfo: { name: 'deepseek-harness-subagent-antigravity', version: '0.2.1-rc.3' },
     }, signal))
     const info = record(response.agentInfo)
@@ -126,11 +134,23 @@ export class AntigravityWire {
       || info.version !== ACP_AGENT_VERSION) {
       throw new AntigravityProtocolError('unsupported ACP runtime identity or version')
     }
-    if (!Array.isArray(response.authMethods)
-      || !response.authMethods.some(method => record(method).id === 'agent-platform')) {
-      throw new AntigravityProtocolError('Agent Platform authentication is unavailable')
+    if (authMethod !== 'native') {
+      if (!Array.isArray(response.authMethods)) {
+        throw new AntigravityProtocolError('ACP did not advertise authentication methods')
+      }
+      const advertised = response.authMethods.some(method => record(method).id === authMethod)
+      // The pinned runtime advertises no buttons under required enterprise
+      // gateway policy. An explicit gateway selection may still authenticate
+      // when the caller enabled the native gateway gate in the child process.
+      const requiredGateway = authMethod === 'gateway' && response.authMethods.length === 0
+        && this.options.gatewayAuthEnabled === true
+      if (!advertised && !requiredGateway) {
+        throw new AntigravityProtocolError('configured authentication method is unavailable')
+      }
+      record(await this.request('authenticate', { methodId: authMethod }, signal))
     }
-    record(await this.request('authenticate', { methodId: 'agent-platform' }, signal))
+    // initialize (and some authenticate methods) does not prove that credentials
+    // or model access are valid. Native state is resolved later by session/new.
     this.initialized = true
   }
 

@@ -4,8 +4,6 @@
  * see NOTICE. DSH owns scheduling/processes; Antigravity owns the agent loop.
  */
 import { randomUUID } from 'node:crypto'
-import { access } from 'node:fs/promises'
-import { isAbsolute } from 'node:path'
 import type { Readable } from 'node:stream'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type { ContentBlock } from '@deepseek-ai/dsh-llm'
@@ -15,20 +13,21 @@ import {
   type SubagentResult, type SubagentRun, type SubagentStartRequest,
   type SubagentStopReason,
 } from '@deepseek-ai/dsh-subagent'
-import type { SubprocessHandle, SubprocessOutcome, SubprocessSpawnSpec } from '@deepseek-ai/dsh-subprocess'
+import {
+  scrubbedParentEnv,
+  type SubprocessHandle, type SubprocessOutcome, type SubprocessSpawnSpec,
+} from '@deepseek-ai/dsh-subprocess'
+import { authenticationEnvironment, resolveAuthMethod, type AuthenticationConfig } from './auth.js'
 import { resolveRuntime } from './runtime.js'
 import { AntigravityWire } from './wire.js'
 
-export interface AntigravityRunSpec {
+export interface AntigravityRunSpec extends AuthenticationConfig {
   cwd: string
   model?: string
   effort?: string
   allowedModels?: readonly string[]
   allowedEfforts?: readonly string[]
   disabledTools?: readonly string[]
-  gcpProject: string
-  gcpLocation: string
-  adcPath?: string
   runtimeDir?: string
   permissionMode: 'deny' | 'allow-once'
   env: Record<string, string>
@@ -121,22 +120,9 @@ function observeStdoutDrain(input: Readable | undefined): {
 }
 
 function childEnvironment(spec: AntigravityRunSpec, runtimeEnv: Record<string, string>): NodeJS.ProcessEnv {
-  const env: NodeJS.ProcessEnv = { ...spec.env }
-  // Agent Platform ADC is deliberate. An ambient key/gateway must never
-  // silently select Express mode or another billing/model route.
-  for (const key of new Set([...Object.keys(process.env), ...Object.keys(env)])) {
-    if (/^(?:GOOGLE_API_KEY|GEMINI_API_KEY|AGY_LLM_GATEWAY_.*)$/i.test(key)) env[key] = undefined
-  }
-  Object.assign(env, runtimeEnv, {
-    GOOGLE_API_KEY: undefined,
-    GEMINI_API_KEY: undefined,
-    GOOGLE_CLOUD_PROJECT: spec.gcpProject,
-    GOOGLE_CLOUD_LOCATION: spec.gcpLocation,
-    GOOGLE_GENAI_USE_VERTEXAI: 'true',
-  })
-  const adc = spec.adcPath ?? spec.env.GOOGLE_APPLICATION_CREDENTIALS ?? process.env.GOOGLE_APPLICATION_CREDENTIALS
-  if (adc) env.GOOGLE_APPLICATION_CREDENTIALS = adc
-  return env
+  // The subprocess service adds its scrubbed base. Runtime helper paths must
+  // win over the explicit overlay; auth tombstones remove conflicting routes.
+  return { ...spec.env, ...authenticationEnvironment(spec), ...runtimeEnv }
 }
 
 /** Establish native execution before handing lifecycle ownership to DSH. */
@@ -146,18 +132,17 @@ export async function startAntigravityRun(
 ): Promise<SubagentRun> {
   const texts = textTask(request.prompt)
   request.signal.throwIfAborted()
-  if (!spec.gcpProject.trim() || !spec.gcpLocation.trim()) {
-    throw new RunFailure('configuration', 'invalid-input')
-  }
-  const configuredAdc = spec.adcPath ?? spec.env.GOOGLE_APPLICATION_CREDENTIALS ?? process.env.GOOGLE_APPLICATION_CREDENTIALS
-  if (configuredAdc) {
-    if (!isAbsolute(configuredAdc)) throw new RunFailure('configuration', 'invalid-input')
-    try { await access(configuredAdc) } catch (cause) { throw new RunFailure('configuration', 'unavailable', cause) }
-  }
+  const authMethod = resolveAuthMethod(spec.authMethod)
   let runtime: Awaited<ReturnType<typeof resolveRuntime>>
   try { runtime = await resolveRuntime(spec.runtimeDir) }
   catch (cause) { throw new RunFailure('runtime', 'unavailable', cause) }
   request.signal.throwIfAborted()
+
+  let env: NodeJS.ProcessEnv
+  try { env = childEnvironment(spec, runtime.env) }
+  catch (cause) { throw new RunFailure('configuration', 'invalid-input', cause) }
+  const effectiveEnv = { ...scrubbedParentEnv(), ...env }
+  const gatewayAuthEnabled = /^(?:1|true|yes|on)$/i.test(effectiveEnv.AGY_ACP_ENABLE_GATEWAY_AUTH?.trim() ?? '')
 
   let child: SubprocessHandle
   try {
@@ -166,7 +151,7 @@ export async function startAntigravityRun(
       cwd: spec.cwd,
       stdio: { stdin: 'pipe', stdout: 'pipe', stderr: 'pipe' },
       graceMs: spec.disposeGraceMs,
-      env: childEnvironment(spec, runtime.env),
+      env,
     })
   } catch (cause) { throw new RunFailure('runtime', 'unavailable', cause) }
 
@@ -217,6 +202,8 @@ export async function startAntigravityRun(
   try {
     if (!child.stdin || !child.stdout) throw new RunFailure('initialize', 'protocol')
     wire = new AntigravityWire(child.stdout, child.stdin, {
+      authMethod,
+      gatewayAuthEnabled,
       ...(spec.model === undefined ? {} : { model: spec.model }),
       ...(spec.effort === undefined ? {} : { effort: spec.effort }),
       ...(spec.allowedModels === undefined ? {} : { allowedModels: spec.allowedModels }),
