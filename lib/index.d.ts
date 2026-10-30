@@ -1,5 +1,5 @@
 /**
- * Native Antigravity one-shot providers for DeepSeek Harness 0.2.1-rc.5.
+ * Native Antigravity one-shot providers for the DeepSeek Harness 0.2.1 series.
  * Adapted from the MIT-licensed DeepSeek Harness provider architecture.
  * See NOTICE for the upstream revision and attribution.
  */

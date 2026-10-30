@@ -9,15 +9,17 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-Install this bundle into a DeepSeek Harness **0.2.1-rc.5** Profile when delegated work should run in a genuine Antigravity agent in the parent workspace. Every delegation starts a fresh **Google Antigravity ACP Server 1.4.3** and matching native harness, creates one session, and sends one self-contained text task. Antigravity owns reasoning, its tools, and the agent loop. DSH owns delegation, subprocess lifetime, cancellation, and result delivery.
+Install this bundle into a DeepSeek Harness **0.2.1 series** Profile (`>=0.2.1-rc.3 <0.2.2-0`) when delegated work should run in a genuine Antigravity agent in the parent workspace. Every delegation starts a fresh **Google Antigravity ACP Server 1.4.3** and matching native harness, creates one session, and sends one self-contained text task. Antigravity owns reasoning, its tools, and the agent loop. DSH owns delegation, subprocess lifetime, cancellation, and result delivery.
 
 The implementation follows the official [`@deepseek-ai/dsh-subagent-codex`](https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.1-rc.5/packages/subagent/subagent-codex) provider's architecture. This is a community package, not an official DeepSeek or Google integration. It does not wrap `agy --print`, automate the Antigravity App, or run a model inside DSH's agent loop.
 
 No model or reasoning effort is restricted by the public bundle. Omitted model settings retain native defaults. Explicit settings must be supported by the ACP runtime and successfully read back; there is no fallback to another model, backend, or host executable.
 
-Version **0.2.2** includes the pinned native runtime in its Windows x64 release bundle. Authentication remains selectable, defaulting to ACP's own saved selection. Users upgrading from 0.1.0 who want its ADC behavior should set `authMethod: agent-platform` and `agentPlatformMode: adc`.
+Version **0.2.3** includes the pinned native runtime in its Windows x64 release bundle. Authentication remains selectable, defaulting to ACP's own saved selection. Users upgrading from 0.1.0 who want its ADC behavior should set `authMethod: agent-platform` and `agentPlatformMode: adc`.
 
-**0.2.2 targets Harness 0.2.1-rc.5.** All DSH dependencies and peer dependencies are aligned to that release. The relevant upstream provider, subagent, subprocess, SDK protocol, and timeout source files are unchanged from rc.3; the ACP integration and authentication behavior are preserved. Upgrade Harness before installing this bundle. Use plugin 0.2.1 for Harness rc.3. See the [compatibility review](./docs/ACP-VERIFICATION.md#022-harness-021-rc5-compatibility) for the verification scope.
+**0.2.3 supports the 0.2.1 series from rc.3 onward**, including subsequent `0.2.1-rc.*` releases and stable `0.2.1`, without registering each version. The range excludes `0.2.2` and its prereleases. All official DSH packages, Cordis, and Schemastery are peer dependencies supplied by the host/Profile; the adapter no longer installs its own pinned DSH dependencies. Use a coherent host dependency set matching your Harness release. The required SDK protocol and subagent tool packages are also peers, not optional features.
+
+The latest source review covers rc.5; the relevant upstream provider, subagent, subprocess, SDK protocol, and timeout sources are unchanged from rc.3. The wider range is a compatibility policy, not a claim that unreleased versions were exercised. ACP integration, authentication, and performance behavior are preserved. See the [compatibility record](./docs/ACP-VERIFICATION.md#023-harness-021-series-and-host-peers).
 
 ## Contents
 
@@ -32,7 +34,7 @@ Version **0.2.2** includes the pinned native runtime in its Windows x64 release 
 
 ### Installing the Bundle
 
-Download **`ashenjyy-dsh-subagent-antigravity-0.2.2-win32-x64.tgz`** from [GitHub Releases](https://github.com/AshenJyy/dsh-subagent-antigravity/releases). This **Windows x64 complete bundle** includes ACP Server 1.4.3, its matching native harness, and their integrity record. Add it as a local bundle using the DSH plugin installer or Plugins page for your Profile. No separate runtime installer or runtime download is needed.
+Download **`ashenjyy-dsh-subagent-antigravity-0.2.3-win32-x64.tgz`** from [GitHub Releases](https://github.com/AshenJyy/dsh-subagent-antigravity/releases). This **Windows x64 complete bundle** includes ACP Server 1.4.3, its matching native harness, and their integrity record. Add it as a local bundle using the DSH plugin installer or Plugins page for your Profile. No separate runtime installer or runtime download is needed.
 
 The complete bundle has `os`/`cpu` constraints to prevent installation on the wrong platform. It still requires DSH dependencies and a usable authentication configuration; it does not include accounts or credentials. Use this repository's release artifact rather than an unrelated similarly named npm package.
 
@@ -48,7 +50,7 @@ Enabling the bundle registers one provider and the global `subagent_antigravity`
 
 ### Authentication
 
-**First use requires an explicit authentication choice and setup. Installing the plugin does not open a login page, and 0.2.2 has no dedicated login button.** The complete TGZ contains the runtime; users configure their account, API key, project, and credential paths locally.
+**First use requires an explicit authentication choice and setup. Installing the plugin does not open a login page, and 0.2.3 has no dedicated login button.** The complete TGZ contains the runtime; users configure their account, API key, project, and credential paths locally.
 
 Choose authentication per provider instance. The default, `native`, leaves selection to ACP's existing settings and enterprise policy. It does not send an `authenticate` request or try methods in sequence. An explicit method must be available under the runtime's policy; failure does not select another account or route.
 
@@ -149,10 +151,10 @@ In a packaged application or a terminal subject to filesystem redirection, `AppD
 |---|---|
 | `The system cannot find the path specified`, pointing to the ADC file | Check the actual `adcPath` location and DSH's file access. Repeating login or restarting alone does not correct a wrong path. |
 | `Authentication required` | Check the authentication method and complete configuration. `native` does not automatically select personal login; Agent Platform ADC also needs a project, location, and discoverable credentials. |
-| 0.2.2 reports only `stage: session; category: protocol` | This wrapper is too generic and can hide an authentication failure. It does not establish protocol corruption or credential expiry. Inspect the local native diagnostic and remove sensitive information before sharing it. |
+| 0.2.3 reports only `stage: session; category: protocol` | This wrapper is too generic and can hide an authentication failure. It does not establish protocol corruption or credential expiry. Inspect the local native diagnostic and remove sensitive information before sharing it. |
 | Authentication command succeeds but a model request fails | Check account permissions, project, location, model availability, and quota. The authentication command sends no model request. |
 
-The package includes no user credentials or preset local ADC path. Version 0.2.2 does not resolve Windows application-directory redirection automatically or verify credential paths through the actual DSH child process. These instructions are not a substitute for deployment validation.
+The package includes no user credentials or preset local ADC path. Version 0.2.3 does not resolve Windows application-directory redirection automatically or verify credential paths through the actual DSH child process. These instructions are not a substitute for deployment validation.
 
 ### Configuration
 
@@ -266,7 +268,7 @@ The parent sees the launch acknowledgment and eventual assistant result or safe 
 
 ## Known limitations and deferred work
 
-- **Exact compatibility baseline:** DSH `0.2.1-rc.5`, ACP runtime `1.4.3`, ACP protocol v1. Other releases require a deliberate compatibility update.
+- **Compatibility range:** DSH `>=0.2.1-rc.3 <0.2.2-0`; subsequent 0.2.1 RCs and stable 0.2.1 are admitted without per-version registration. An upstream breaking change can still require an adapter update. ACP runtime `1.4.3` and ACP protocol v1 remain pinned.
 - **Authentication evidence:** All advertised native routes are represented in configuration, but the added 0.2.0 flows were checked against source only. They were not each logged in or exercised with inference. Account and enterprise policy may make a method unavailable.
 - **OAuth can require interaction:** First login or reauthentication can open a browser. The authentication command does not make later tasks strictly noninteractive.
 - **Fresh is not ephemeral:** ACP can persist its own sessions. The adapter does not resume them, but does not claim Codex's `ephemeral: true` guarantee or erase native records.
@@ -283,6 +285,8 @@ The parent sees the launch acknowledgment and eventual assistant result or safe 
 npm ci --ignore-scripts
 npm run pack:bundle
 ```
+
+Source development dependencies and the lockfile pin the rc.5 build environment for reproducible compilation. These development pins do not constrain consumers: the Windows release manifest omits `devDependencies`, the TGZ contains no DSH packages or dependency lockfile, and its DSH peer ranges remain `>=0.2.1-rc.3 <0.2.2-0`. Updating Harness within this range does not require rebuilding the plugin solely to change a version pin.
 
 Run the release build on Windows x64. `pack:bundle` compiles the adapter, stages only the public package files, and installs a fresh, checksum-verified official runtime into that staging directory. It never copies an existing login home. Use `npm run pack:bundle -- --archive /absolute/path/to/official.zip` to reuse an official ZIP with the same digest verification. It emits a `win32-x64.tgz` and SHA-256 sidecar. Plain `npm pack` remains an adapter-only developer archive, not the complete release.
 

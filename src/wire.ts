@@ -6,6 +6,7 @@
  */
 
 import type { Readable, Writable } from 'node:stream'
+import { createRequire } from 'node:module'
 import type { ContentBlock } from '@deepseek-ai/dsh-llm'
 import type { SubagentResult } from '@deepseek-ai/dsh-subagent'
 import { JsonRpcLineTransport } from '@deepseek-ai/dsh-sdk-protocol'
@@ -28,6 +29,10 @@ import {
 export type { Effort } from './model-policy.js'
 
 type JsonObject = Record<string, unknown>
+
+// Identify this adapter, independently of whichever compatible DSH host loads it.
+// Read once through Node's module cache, not on every delegated task.
+const { version: CLIENT_VERSION } = createRequire(import.meta.url)('../package.json') as { version: string }
 
 export interface AntigravityWireOptions extends ModelPolicy {
   /** Native inheritance skips authenticate and lets session/new resolve state. */
@@ -127,7 +132,7 @@ export class AntigravityWire {
     const response = record(await this.request('initialize', {
       protocolVersion: 1,
       clientCapabilities: authMethod === 'gateway' ? { auth: { _meta: { gateway: true } } } : {},
-      clientInfo: { name: 'deepseek-harness-subagent-antigravity', version: '0.2.1-rc.5' },
+      clientInfo: { name: 'deepseek-harness-subagent-antigravity', version: CLIENT_VERSION },
     }, signal))
     const info = record(response.agentInfo)
     if (response.protocolVersion !== 1 || info.name !== ACP_AGENT_NAME

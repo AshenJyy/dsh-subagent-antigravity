@@ -79,6 +79,8 @@ async function main() {
     manifest.os = [process.platform]
     manifest.cpu = [process.arch]
     manifest.license = 'SEE LICENSE IN NOTICE'
+    // Exact development pins belong to the source checkout, not the host-facing bundle.
+    delete manifest.devDependencies
     manifest.antigravityRuntime = { version: DEFAULT_RUNTIME_VERSION, platform: asset.platform, archiveSha256: asset.sha256 }
     await writeFile(join(stage, 'package.json'), `${JSON.stringify(manifest, null, 2)}\n`)
     // Do not run package lifecycle hooks in the clean staging directory.
