@@ -2,7 +2,7 @@
 
 The 0.1.0 observations below were made on Windows x64, 2026-10-28. These were native protocol/configuration operations, not automated tests or model tasks. The 0.2.0 authentication expansion was reviewed against the pinned runtime's source; its additional login routes were not exercised.
 
-## Baselines
+## Original observation baselines
 
 - DeepSeek Harness: `dsh-v0.2.1-rc.3`, commit `1f81c047fc48fa190a683e469daa699857e9afe8`.
 - Antigravity ACP runtime: `1.4.3`, from official registry commit `06229c691d24d039e2363ba12abe5c9dfae5bc66`.
@@ -49,3 +49,13 @@ The complete Windows x64 release adds the original ACP 1.4.3 executable and matc
 The release builder compiles TypeScript, verifies the official ZIP against the pinned registry SHA-256, extracts a fresh pair into a temporary package directory, and checks that both binaries and the installation record are present in the npm archive. The source ZIP digest remains `54c2e16378d9a4952e1da70e355f3c33c4f284308d6de48ab3e6e34a127bd325`. The published TGZ has its own SHA-256 sidecar.
 
 This is a packaging change. No login home, credentials, model settings, native session, or local configuration is copied. No new authentication, model execution, automated test, or inference smoke test is part of this release.
+
+## 0.2.2 Harness 0.2.1-rc.5 compatibility
+
+Reviewed on 2026-10-30 against the official `dsh-v0.2.1-rc.5` tag, commit [`b830ec950faba0a46dda564be3e2d854afed94f1`](https://github.com/deepseek-ai/deepseek-harness/commit/b830ec950faba0a46dda564be3e2d854afed94f1), and the published npm packages at `0.2.1-rc.5`.
+
+- Compared complete Git trees for `packages/subagent/{subagent-codex,subagent-acp,subagent,tool-subagent}` and `packages/{core,sdk,subprocess,util}` between rc.3 and rc.5. Only package manifests changed in these directories; no source files were added, changed, or removed. This covers provider registration, run lifecycle and cancellation, tool activation, subprocess management, JSON-RPC transport, session/content types, and timeout helpers used by this adapter.
+- Aligned the exact DSH engine, direct dependencies, peer dependencies, lockfile, and ACP client compatibility metadata with `0.2.1-rc.5`. The dependency layout continues to match the official Codex provider. Plugin version `0.2.2` is for Harness rc.5; plugin `0.2.1` remains the rc.3 bundle.
+- Kept the pinned ACP 1.4.3 binaries and their integrity checks, cached runtime resolution, bounded output collection, stderr backpressure, and one native process per task. No new authentication or model restrictions were introduced.
+- Validation scope: TypeScript compilation against the rc.5 packages, dependency-version inspection, and Windows x64 archive-content/hash inspection. No automated tests, DSH integration run, login, ACP session, or model inference was performed for this compatibility update. The earlier observations above remain historical evidence, not rc.5 runtime validation.
+- Authentication instructions are included in both bundled READMEs. The existing Windows ADC path-visibility limitation is unchanged; this release does not automatically fix a locally configured credential path.

@@ -1,6 +1,6 @@
 /**
  * Minimal Antigravity ACP 1.4.3 adapter, following the MIT-licensed
- * @deepseek-ai/dsh-subagent-codex 0.2.1-rc.3 wire's separation of transport,
+ * @deepseek-ai/dsh-subagent-codex 0.2.1-rc.5 wire's separation of transport,
  * product protocol, permissions, cancellation, and answer selection.
  * The shared JSON-RPC transport owns framing and request correlation.
  */
@@ -127,7 +127,7 @@ export class AntigravityWire {
     const response = record(await this.request('initialize', {
       protocolVersion: 1,
       clientCapabilities: authMethod === 'gateway' ? { auth: { _meta: { gateway: true } } } : {},
-      clientInfo: { name: 'deepseek-harness-subagent-antigravity', version: '0.2.1-rc.3' },
+      clientInfo: { name: 'deepseek-harness-subagent-antigravity', version: '0.2.1-rc.5' },
     }, signal))
     const info = record(response.agentInfo)
     if (response.protocolVersion !== 1 || info.name !== ACP_AGENT_NAME

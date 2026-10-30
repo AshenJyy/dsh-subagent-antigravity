@@ -9,13 +9,15 @@ kind: "package-bundle"
 
 ## 概述
 
-将本 Bundle 安装到 **DeepSeek Harness 0.2.1-rc.3** 的 Profile，即可把自包含文本任务交给真正的 **Google Antigravity ACP Server 1.4.3**。每次任务启动新的 ACP Server 与配套原生 harness，创建一个会话并执行一轮。推理、文件读写、命令执行和工具循环由 Antigravity 完成；DSH 负责派发、进程管理、取消和结果通知。
+将本 Bundle 安装到 **DeepSeek Harness 0.2.1-rc.5** 的 Profile，即可把自包含文本任务交给真正的 **Google Antigravity ACP Server 1.4.3**。每次任务启动新的 ACP Server 与配套原生 harness，创建一个会话并执行一轮。推理、文件读写、命令执行和工具循环由 Antigravity 完成；DSH 负责派发、进程管理、取消和结果通知。
 
-实现沿用官方 [`@deepseek-ai/dsh-subagent-codex`](https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.1-rc.3/packages/subagent/subagent-codex) 的分层。这是社区插件，不是 DeepSeek 或 Google 官方集成。它不调用 `agy --print`、不操纵 App 界面，也不把模型接进 DSH 的 Agent 循环代替原生执行。
+实现沿用官方 [`@deepseek-ai/dsh-subagent-codex`](https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.1-rc.5/packages/subagent/subagent-codex) 的分层。这是社区插件，不是 DeepSeek 或 Google 官方集成。它不调用 `agy --print`、不操纵 App 界面，也不把模型接进 DSH 的 Agent 循环代替原生执行。
 
 公开 Bundle **不限定模型或 effort**。省略配置时使用原生默认值；显式配置必须由 ACP 支持并回读确认。任何配置或执行失败都不会回退到其他模型、后端或宿主 CLI。
 
-**0.2.1** 的 Windows x64 完整发行包已内置固定版本原生运行时。认证方式仍可选择，默认沿用 ACP 已有选择。从 0.1.0 升级并希望保持 ADC 行为时，请设置 `authMethod: agent-platform` 与 `agentPlatformMode: adc`。
+**0.2.2** 的 Windows x64 完整发行包已内置固定版本原生运行时。认证方式仍可选择，默认沿用 ACP 已有选择。从 0.1.0 升级并希望保持 ADC 行为时，请设置 `authMethod: agent-platform` 与 `agentPlatformMode: adc`。
+
+**0.2.2 适配 Harness 0.2.1-rc.5。** 所有 DSH 依赖与 peer 依赖均对齐此版本。上游相关提供方、子代理、子进程、SDK 协议和超时源码相较 rc.3 没有变化，因此保留现有 ACP 集成与认证行为。请先升级 Harness 再安装本包；Harness rc.3 请继续使用插件 0.2.1。核对范围见[兼容性记录](./docs/ACP-VERIFICATION.md#022-harness-021-rc5-compatibility)。
 
 ## 目录
 
@@ -30,7 +32,7 @@ kind: "package-bundle"
 
 ### 安装 Bundle
 
-从 [GitHub Releases](https://github.com/AshenJyy/dsh-subagent-antigravity/releases) 下载 **`ashenjyy-dsh-subagent-antigravity-0.2.1-win32-x64.tgz`**。这是 **Windows x64 完整包**，内含 ACP Server 1.4.3、配套原生 harness 及校验记录。通过 DSH 插件页或 CLI 安装到实际使用的 Profile 即可，无需再执行运行时安装命令，也无需下载运行时。
+从 [GitHub Releases](https://github.com/AshenJyy/dsh-subagent-antigravity/releases) 下载 **`ashenjyy-dsh-subagent-antigravity-0.2.2-win32-x64.tgz`**。这是 **Windows x64 完整包**，内含 ACP Server 1.4.3、配套原生 harness 及校验记录。通过 DSH 插件页或 CLI 安装到实际使用的 Profile 即可，无需再执行运行时安装命令，也无需下载运行时。
 
 完整包通过 `os`/`cpu` 限制防止误装到其他平台，仍需要 DSH 依赖和可用的认证配置，不包含账号或凭据。请使用本仓库的发行包，避免与其他同名包混淆。
 
@@ -44,7 +46,7 @@ dsh plugin --profile web add /absolute/path/to/the-release-package.tgz
 
 ### 身份验证
 
-**首次使用需要主动选择认证方式并完成配置。安装插件不会自动打开登录页面，0.2.1 也没有专门的登录按钮。** 完整 TGZ 包含运行时；账号、API Key、项目和凭据路径由使用者在本机配置。
+**首次使用需要主动选择认证方式并完成配置。安装插件不会自动打开登录页面，0.2.2 也没有专门的登录按钮。** 完整 TGZ 包含运行时；账号、API Key、项目和凭据路径由使用者在本机配置。
 
 每个 Provider 实例可以选择认证方式。默认 `native` 沿用 ACP 已有设置和企业策略，不发送 `authenticate`，也不会轮流尝试不同登录方式。显式方法必须受原生运行时及其策略支持；失败不会改用其他账号或路线。
 
@@ -145,10 +147,10 @@ gcloud auth application-default set-quota-project YOUR_PROJECT_ID
 |---|---|
 | `The system cannot find the path specified`，并指向 ADC 文件 | 核对 `adcPath` 的实际位置和 DSH 的文件访问范围。单纯重新登录或重启不会修正错误路径。 |
 | `Authentication required` | 检查认证方式及完整配置。`native` 不会自动选择个人登录；Agent Platform ADC 还需要项目、区域及可发现的凭据。 |
-| 0.2.1 只显示 `stage: session; category: protocol` | 这是过于笼统的包装错误，可能包含认证失败；不能据此断定协议损坏或凭据过期。查看本机原生日志中的原因，分享时先移除敏感信息。 |
+| 0.2.2 只显示 `stage: session; category: protocol` | 这是过于笼统的包装错误，可能包含认证失败；不能据此断定协议损坏或凭据过期。查看本机原生日志中的原因，分享时先移除敏感信息。 |
 | 认证命令成功，模型请求仍失败 | 继续检查账号权限、项目、区域、模型可用性和配额。认证命令不发送模型请求。 |
 
-本包不包含用户凭据或预设的本机 ADC 路径。0.2.1 不会自动解析 Windows 应用目录映射，也没有用实际 DSH 子进程验证凭据路径的功能；README 中的步骤不能代替实际部署验证。
+本包不包含用户凭据或预设的本机 ADC 路径。0.2.2 不会自动解析 Windows 应用目录映射，也没有用实际 DSH 子进程验证凭据路径的功能；README 中的步骤不能代替实际部署验证。
 
 ### 配置
 
@@ -244,8 +246,8 @@ Bundle 插入以下 Host 条目，所有预设均可看到工具：
 
 ## 进一步探索
 
-- [官方 Codex 提供方](https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.1-rc.3/packages/subagent/subagent-codex)
-- [Subagent 子系统](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.3/docs/subsystems/subagent.zh.md)
+- [官方 Codex 提供方](https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.1-rc.5/packages/subagent/subagent-codex)
+- [Subagent 子系统](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/docs/subsystems/subagent.zh.md)
 - [固定版本官方载荷](https://github.com/agentclientprotocol/registry/blob/06229c691d24d039e2363ba12abe5c9dfae5bc66/antigravity-acp/agent.json)
 - [ADC 文档](https://docs.cloud.google.com/docs/authentication/application-default-credentials)
 - [协议核查记录](docs/ACP-VERIFICATION.md)
@@ -262,7 +264,7 @@ Antigravity 在指定工作目录中获得独立、自包含文本任务，使�
 
 ## 已知限制与延期工作
 
-- 固定兼容 DSH `0.2.1-rc.3`、ACP runtime `1.4.3` 与 ACP v1；升级需重新确认接口。
+- 固定兼容 DSH `0.2.1-rc.5`、ACP runtime `1.4.3` 与 ACP v1；升级需重新确认接口。
 - 配置覆盖原生公布的认证路线；0.2.0 新增流程仅据源码核对，未逐一真实登录或执行推理。账号及企业策略仍可能限制可用方法。
 - OAuth 首次登录或重新认证可能打开浏览器；主动认证命令不保证后续任务完全无交互。
 - 新会话不等于 `ephemeral`。ACP 可保存原生会话；本包不恢复它们，也不删除原生记录。
