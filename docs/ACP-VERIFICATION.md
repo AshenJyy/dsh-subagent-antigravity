@@ -1,5 +1,7 @@
 # ACP verification record
 
+[Home](../README.md) · [Documentation](README.md) · [Current authentication guide](AUTHENTICATION.md)
+
 The 0.1.0 observations below were made on Windows x64, 2026-10-28. These were native protocol/configuration operations, not automated tests or model tasks. The 0.2.0 authentication expansion was reviewed against the pinned runtime's source; its additional login routes were not exercised.
 
 ## Original observation baselines

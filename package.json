@@ -27,6 +27,8 @@
     "LICENSE",
     "NOTICE",
     "README.zh.md",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
     "docs/",
     "scripts/",
     "src/",
