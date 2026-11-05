@@ -2,9 +2,9 @@
 
 [English home](../README.md) · [中文首页](../README.zh.md) · [Releases / 下载](https://github.com/AshenJyy/dsh-subagent-antigravity/releases)
 
-Start with installation on the homepage, then choose an authentication route. The release bundle targets Windows x64 and DeepSeek Harness `>=0.2.1-rc.3 <0.2.2-0`.
+Start with installation on the homepage, then choose an authentication route. The release bundle targets Windows x64 and DeepSeek Harness `>=0.2.1-rc.3 <0.2.2-0 || >=0.2.2-rc.1 <0.2.3-0`.
 
-先按首页安装，再选择登录方式。发行包面向 Windows x64，支持 DeepSeek Harness `>=0.2.1-rc.3 <0.2.2-0`。
+先按首页安装，再选择登录方式。发行包面向 Windows x64，支持 DeepSeek Harness `>=0.2.1-rc.3 <0.2.2-0 || >=0.2.2-rc.1 <0.2.3-0`。
 
 | Topic / 内容 | English | 中文 |
 |---|---|---|

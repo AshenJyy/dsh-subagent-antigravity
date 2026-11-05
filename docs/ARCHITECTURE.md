@@ -43,7 +43,7 @@ The parent sees the launch acknowledgment and eventual assistant result or safe 
 
 ## Known limitations and deferred work
 
-- **Compatibility range:** DSH `>=0.2.1-rc.3 <0.2.2-0`; subsequent 0.2.1 RCs and stable 0.2.1 are admitted without per-version registration. An upstream breaking change can still require an adapter update. ACP runtime `1.4.3` and ACP protocol v1 remain pinned.
+- **Compatibility range:** DSH `>=0.2.1-rc.3 <0.2.2-0 || >=0.2.2-rc.1 <0.2.3-0`; subsequent RCs and stable releases within the 0.2.1 and 0.2.2 series are admitted without per-version registration. Cordis and Schemastery peers accept the matching 4.0/4.1 and 3.18/3.19 host lines. An upstream breaking change can still require an adapter update. ACP runtime `1.4.3` and ACP protocol v1 remain pinned.
 - **Authentication evidence:** All advertised native routes are represented in configuration, but the added 0.2.0 flows were checked against source only. They were not each logged in or exercised with inference. Account and enterprise policy may make a method unavailable.
 - **OAuth can require interaction:** First login or reauthentication can open a browser. The authentication command does not make later tasks strictly noninteractive.
 - **Fresh is not ephemeral:** ACP can persist its own sessions. The adapter does not resume them, but does not claim Codex's `ephemeral: true` guarantee or erase native records.

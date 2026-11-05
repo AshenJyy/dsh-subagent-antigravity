@@ -2,7 +2,7 @@
 
 [返回首页](../README.zh.md) · [文档目录](README.md) · [English](AUTHENTICATION.md)
 
-**首次使用需要主动选择认证方式并完成配置。安装插件不会自动打开登录页面，0.2.3 也没有专门的登录按钮。** 完整 TGZ 包含运行时；账号、API Key、项目和凭据路径由使用者在本机配置。
+**首次使用需要主动选择认证方式并完成配置。安装插件不会自动打开登录页面，0.2.4 也没有专门的登录按钮。** 完整 TGZ 包含运行时；账号、API Key、项目和凭据路径由使用者在本机配置。
 
 每个 Provider 实例可以选择认证方式。默认 `native` 沿用 ACP 已有设置和企业策略，不发送 `authenticate`，也不会轮流尝试不同登录方式。显式方法必须受原生运行时及其策略支持；失败不会改用其他账号或路线。
 
@@ -103,7 +103,7 @@ gcloud auth application-default set-quota-project YOUR_PROJECT_ID
 |---|---|
 | `The system cannot find the path specified`，并指向 ADC 文件 | 核对 `adcPath` 的实际位置和 DSH 的文件访问范围。单纯重新登录或重启不会修正错误路径。 |
 | `Authentication required` | 检查认证方式及完整配置。`native` 不会自动选择个人登录；Agent Platform ADC 还需要项目、区域及可发现的凭据。 |
-| 0.2.3 只显示 `stage: session; category: protocol` | 这是过于笼统的包装错误，可能包含认证失败；不能据此断定协议损坏或凭据过期。查看本机原生日志中的原因，分享时先移除敏感信息。 |
+| 0.2.4 只显示 `stage: session; category: protocol` | 这是过于笼统的包装错误，可能包含认证失败；不能据此断定协议损坏或凭据过期。查看本机原生日志中的原因，分享时先移除敏感信息。 |
 | 认证命令成功，模型请求仍失败 | 继续检查账号权限、项目、区域、模型可用性和配额。认证命令不发送模型请求。 |
 
-本包不包含用户凭据或预设的本机 ADC 路径。0.2.3 不会自动解析 Windows 应用目录映射，也没有用实际 DSH 子进程验证凭据路径的功能；README 中的步骤不能代替实际部署验证。
+本包不包含用户凭据或预设的本机 ADC 路径。0.2.4 不会自动解析 Windows 应用目录映射，也没有用实际 DSH 子进程验证凭据路径的功能；README 中的步骤不能代替实际部署验证。

@@ -6,6 +6,14 @@ Entries describe published release behavior. Documentation on the main branch ma
 
 以下记录已发布版本的行为。主分支文档可能比已有 TGZ 内的说明更新；各版本的核对依据与验证范围见 [ACP 记录](docs/ACP-VERIFICATION.md)。
 
+## [0.2.4](https://github.com/AshenJyy/dsh-subagent-antigravity/releases/tag/v0.2.4)
+
+- Add the Harness 0.2.2 series from rc.1, while retaining 0.2.1 support from rc.3. Each series accepts subsequent RCs and its stable release; 0.2.3 remains excluded.
+- Accept the host's Cordis 4.1 and Schemastery 3.19 dependencies alongside the older supported lines. Pin source development to Harness 0.2.2-rc.1, Cordis 4.1.0, and Schemastery 3.19.0.
+- Preserve the official provider lifecycle, ACP 1.4.3 runtime, authentication settings, and unrestricted model/effort selection. Include the reorganized bilingual documentation in the complete Windows bundle.
+
+增加 Harness 0.2.2 系列支持（从 rc.1 起），保留 rc.3 起的 0.2.1 系列，继续复用宿主依赖；开发环境对齐新版。保留现有 ACP、登录配置及模型行为，完整包包含整理后的中英文文档。
+
 ## [0.2.3](https://github.com/AshenJyy/dsh-subagent-antigravity/releases/tag/v0.2.3)
 
 - Accept Harness `>=0.2.1-rc.3 <0.2.2-0`, including later 0.2.1 RCs and stable 0.2.1, without individual version registration.

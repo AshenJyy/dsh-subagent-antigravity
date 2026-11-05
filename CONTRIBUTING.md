@@ -28,7 +28,7 @@ npm run build
 
 Edit `src/` and regenerate `lib/` with the build command; include both in implementation changes. Keep English and Chinese documentation aligned. Documentation-only edits do not require regenerating `lib/` or replacing a released TGZ.
 
-Required DSH peers use `>=0.2.1-rc.3 <0.2.2-0`; source development currently pins rc.5. Do not replace peer ranges with a list of individual RCs or add private runtime copies of the host packages. Review upstream interface changes before widening compatibility. ACP runtime 1.4.3 and its digest remain pinned independently.
+Required DSH peers use `>=0.2.1-rc.3 <0.2.2-0` or `>=0.2.2-rc.1 <0.2.3-0`; source development currently pins 0.2.2-rc.1, Cordis 4.1.0, and Schemastery 3.19.0. Do not replace peer ranges with a list of individual RCs or add private runtime copies of the host packages. Review upstream interface changes before widening compatibility. ACP runtime 1.4.3 and its digest remain pinned independently.
 
 ## Build a complete release
 
@@ -58,7 +58,7 @@ For a bug report, include the plugin and Harness versions, installation source, 
 
 - **源码与目录：** `src/` 为实现，`lib/` 为随源码提交的编译结果，`locale/` 为翻译，`docs/` 为说明，`scripts/pack.mjs` 为完整包构建入口。
 - **开发：** 使用 Node.js 22 或以上及 npm，执行 `npm ci --ignore-scripts`，修改源码后执行 `npm run build` 并一并提交 `lib/`。同步维护中英文文档；仅文档修改无需重建或替换已有 TGZ。
-- **兼容策略：** DSH 必需 peer 依赖保持 `>=0.2.1-rc.3 <0.2.2-0`，rc.5 精确依赖仅用于源码开发。不逐个登记 RC，也不增加宿主包的私有运行时副本。ACP 1.4.3 及摘要独立固定。
+- **兼容策略：** DSH 必需 peer 依赖保持 `>=0.2.1-rc.3 <0.2.2-0` 或 `>=0.2.2-rc.1 <0.2.3-0`，0.2.2-rc.1、Cordis 4.1.0 和 Schemastery 3.19.0 的精确依赖仅用于源码开发。不逐个登记 RC，也不增加宿主包的私有运行时副本。ACP 1.4.3 及摘要独立固定。
 - **完整打包：** 执行 `npm run pack:bundle`；可用上方命令中的 `--archive` 复用官方 ZIP、`--output-dir` 指定目录。构建会重新校验官方 ZIP，并生成 TGZ 和 SHA-256 文件。已有输出不会覆盖；普通 `npm pack` 只有适配器。
 - **发布：** 同步包版本与锁文件、版本记录和下载链接，将 TGZ 及摘要上传到 GitHub Release。原生程序、生成包、登录目录及凭据不提交 Git。保留 MIT 许可和 Google 程序归属说明。
 - **提交说明：** 写清问题、变化、实际完成的验证及限制；区分编译、归档检查、协议配置、认证与模型推理，不将其中一种描述成其他验证。反馈错误时附版本、认证方式和脱敏信息，不提交凭据。

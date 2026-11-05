@@ -13,17 +13,17 @@ kind: "package-bundle"
 
 将 DeepSeek Harness 委派的文本任务交给 **Google Antigravity ACP Server 1.4.3**。每次任务启动独立原生进程和新会话，推理与工具执行由 Antigravity 完成，DSH 负责派发、取消和结果通知。
 
-架构沿用官方 [Codex 子智能体提供方](https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.1-rc.5/packages/subagent/subagent-codex)。这是社区集成，直接使用 ACP Server，无需安装 `agy` CLI 或 Antigravity App。
+架构沿用官方 [Codex 子智能体提供方](https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.2-rc.1/packages/subagent/subagent-codex)。这是社区集成，直接使用 ACP Server，无需安装 `agy` CLI 或 Antigravity App。
 
 | 项目 | 支持范围 |
 |---|---|
 | 平台 | Windows x64 |
-| DeepSeek Harness | `>=0.2.1-rc.3 <0.2.2-0`，包含后续 `0.2.1-rc.*` 和 `0.2.1` 正式版 |
+| DeepSeek Harness | `0.2.1` 从 rc.3 起，`0.2.2` 从 rc.1 起；包含各系列后续 RC 和正式版 |
 | 原生运行时 | ACP Server 1.4.3 及配套 harness，已内置于发行 TGZ |
 | 宿主依赖 | DSH 包、Cordis、Schemastery 由宿主/Profile 提供 |
 | 模型与 effort | 原生默认值或 ACP 支持的显式值，默认不限制、不回退 |
 
-最近一次源码核对覆盖 Harness rc.5。版本范围是兼容策略，不表示已运行验证未来版本，具体见[兼容性记录](docs/ACP-VERIFICATION.md#023-harness-021-series-and-host-peers)。
+兼容范围为 `>=0.2.1-rc.3 <0.2.2-0 || >=0.2.2-rc.1 <0.2.3-0`。最近一次源码核对及编译覆盖 Harness `0.2.2-rc.1`、Cordis 4.1.0 和 Schemastery 3.19.0。各支持系列的后续 RC 及正式版无需逐个登记，不包含 0.2.3；这不表示已运行验证未来版本，具体见[兼容性记录](docs/ACP-VERIFICATION.md#024-harness-022-series)。
 
 ## 目录
 
@@ -38,10 +38,10 @@ kind: "package-bundle"
 
 ### 安装 Bundle
 
-从 [v0.2.3](https://github.com/AshenJyy/dsh-subagent-antigravity/releases/tag/v0.2.3) 下载 **`ashenjyy-dsh-subagent-antigravity-0.2.3-win32-x64.tgz`**，请选择发行 TGZ，而非 GitHub 自动生成的源码压缩包。通过 DSH 插件页安装，或在 CLI 中指定实际使用的 Profile：
+从 [v0.2.4](https://github.com/AshenJyy/dsh-subagent-antigravity/releases/tag/v0.2.4) 下载 **`ashenjyy-dsh-subagent-antigravity-0.2.4-win32-x64.tgz`**，请选择发行 TGZ，而非 GitHub 自动生成的源码压缩包。通过 DSH 插件页安装，或在 CLI 中指定实际使用的 Profile：
 
 ```powershell
-dsh plugin --profile desktop add "C:/path/to/ashenjyy-dsh-subagent-antigravity-0.2.3-win32-x64.tgz"
+dsh plugin --profile desktop add "C:/path/to/ashenjyy-dsh-subagent-antigravity-0.2.4-win32-x64.tgz"
 ```
 
 TGZ 已包含两个原生程序及校验记录。省略 `runtimeDir` 即可使用，无需单独安装或下载运行时。宿主须提供相容的依赖组合；DSH 提示重启时请重启。
@@ -83,8 +83,8 @@ Bundle 自动注册提供方和全局工具 **`subagent_antigravity`**。[工具
 ## 进一步探索
 
 - [文档目录](docs/README.md)
-- [官方 Codex 提供方](https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.1-rc.5/packages/subagent/subagent-codex)
-- [DSH 子智能体子系统](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/docs/subsystems/subagent.md)
+- [官方 Codex 提供方](https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.2-rc.1/packages/subagent/subagent-codex)
+- [DSH 子智能体子系统](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.2-rc.1/docs/subsystems/subagent.md)
 - [固定版本官方 ACP 发行记录](https://github.com/agentclientprotocol/registry/blob/06229c691d24d039e2363ba12abe5c9dfae5bc66/antigravity-acp/agent.json)
 - [协议与兼容性记录](docs/ACP-VERIFICATION.md)
 

@@ -2,7 +2,7 @@
 
 [Home](../README.md) · [Documentation](README.md) · [中文](AUTHENTICATION.zh.md)
 
-**First use requires an explicit authentication choice and setup. Installing the plugin does not open a login page, and 0.2.3 has no dedicated login button.** The complete TGZ contains the runtime; users configure their account, API key, project, and credential paths locally.
+**First use requires an explicit authentication choice and setup. Installing the plugin does not open a login page, and 0.2.4 has no dedicated login button.** The complete TGZ contains the runtime; users configure their account, API key, project, and credential paths locally.
 
 Choose authentication per provider instance. The default, `native`, leaves selection to ACP's existing settings and enterprise policy. It does not send an `authenticate` request or try methods in sequence. An explicit method must be available under the runtime's policy; failure does not select another account or route.
 
@@ -103,7 +103,7 @@ In a packaged application or a terminal subject to filesystem redirection, `AppD
 |---|---|
 | `The system cannot find the path specified`, pointing to the ADC file | Check the actual `adcPath` location and DSH's file access. Repeating login or restarting alone does not correct a wrong path. |
 | `Authentication required` | Check the authentication method and complete configuration. `native` does not automatically select personal login; Agent Platform ADC also needs a project, location, and discoverable credentials. |
-| 0.2.3 reports only `stage: session; category: protocol` | This wrapper is too generic and can hide an authentication failure. It does not establish protocol corruption or credential expiry. Inspect the local native diagnostic and remove sensitive information before sharing it. |
+| 0.2.4 reports only `stage: session; category: protocol` | This wrapper is too generic and can hide an authentication failure. It does not establish protocol corruption or credential expiry. Inspect the local native diagnostic and remove sensitive information before sharing it. |
 | Authentication command succeeds but a model request fails | Check account permissions, project, location, model availability, and quota. The authentication command sends no model request. |
 
-The package includes no user credentials or preset local ADC path. Version 0.2.3 does not resolve Windows application-directory redirection automatically or verify credential paths through the actual DSH child process. These instructions are not a substitute for deployment validation.
+The package includes no user credentials or preset local ADC path. Version 0.2.4 does not resolve Windows application-directory redirection automatically or verify credential paths through the actual DSH child process. These instructions are not a substitute for deployment validation.
