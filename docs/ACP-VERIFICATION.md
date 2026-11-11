@@ -78,3 +78,11 @@ Reviewed on 2026-11-05 against the official `dsh-v0.2.2-rc.1` tag, commit [`6649
 - The shared JSON-RPC transport keeps its request/cancellation interface and now rejects later requests after a terminal stream failure. The adapter creates a transport per native process and closes it during teardown; it does not restart a closed transport.
 - The engine and all DSH peers use `>=0.2.1-rc.3 <0.2.2-0 || >=0.2.2-rc.1 <0.2.3-0`. Cordis accepts `~4.0.5 || ~4.1.0`; Schemastery accepts `~3.18.5 || ~3.19.0`. The host still supplies these required peers. The source build pins Harness 0.2.2-rc.1, Cordis 4.1.0, and Schemastery 3.19.0; no development pins or lockfile are included in the release TGZ.
 - Validation scope: source comparison, TypeScript compilation against the new development dependencies, and Windows archive-content/hash inspection. No automated tests, ACP session, authentication flow, or model inference was performed. Compatibility with later releases is a policy, not a claim of runtime validation.
+
+## 0.2.5 ACP runtime 1.4.5
+
+- Official registry: `02b460362cfedf4d43b03df7aad6d79a353fe064`, `antigravity-acp` version `1.4.5`.
+- Windows x64 archive: https://dl.google.com/agy-extensions/releases/windows/agy-acp-server-1.4.5-windows-x86_64.zip
+- Official archive SHA-256: `d24f4c73c9f96d4f44384e281c855a56c72d8eaa9c5b0fad7ccb1635c6b63f50`.
+- The release uses the matching executable pair and retains archive/file integrity verification. ACP identity validation imports the pinned runtime version rather than duplicating it.
+- Validation scope: TypeScript compilation, registry/manifest review, and release archive/hash inspection. No automated tests, ACP session, authentication flow, or model inference were run for this update. Historical 1.4.3 observations above do not establish 1.4.5 model availability or Carbon inference.

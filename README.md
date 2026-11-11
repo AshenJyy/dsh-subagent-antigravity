@@ -11,7 +11,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-Run delegated text tasks in **Google Antigravity ACP Server 1.4.3** from DeepSeek Harness. Each task starts a fresh native process and session. Antigravity handles reasoning and tools; DSH manages delegation, cancellation, and result delivery.
+Run delegated text tasks in **Google Antigravity ACP Server 1.4.5** from DeepSeek Harness. Each task starts a fresh native process and session. Antigravity handles reasoning and tools; DSH manages delegation, cancellation, and result delivery.
 
 The architecture follows the official [Codex subagent provider](https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.2-rc.1/packages/subagent/subagent-codex). This is a community integration. It uses the ACP Server directly and requires neither the `agy` CLI nor the Antigravity App.
 
@@ -19,7 +19,7 @@ The architecture follows the official [Codex subagent provider](https://github.c
 |---|---|
 | Platform | Windows x64 |
 | DeepSeek Harness | `0.2.1` from rc.3, and `0.2.2` from rc.1; subsequent RCs and stable releases within these series |
-| Native runtime | ACP Server 1.4.3 and its matching harness, included in the release TGZ |
+| Native runtime | ACP Server 1.4.5 and its matching harness, included in the release TGZ |
 | Host dependencies | DSH packages, Cordis, and Schemastery supplied by the host/Profile |
 | Model and effort | Native defaults or explicit ACP-supported values; unrestricted by default, no fallback |
 
@@ -38,10 +38,10 @@ The compatibility range is `>=0.2.1-rc.3 <0.2.2-0 || >=0.2.2-rc.1 <0.2.3-0`. The
 
 ### Installing the Bundle
 
-Download **`ashenjyy-dsh-subagent-antigravity-0.2.4-win32-x64.tgz`** from [v0.2.4](https://github.com/AshenJyy/dsh-subagent-antigravity/releases/tag/v0.2.4). Choose the release TGZ, not GitHub's source-code archive. Install it through DSH's Plugins page or the CLI for your Profile:
+Download **`ashenjyy-dsh-subagent-antigravity-0.2.5-win32-x64.tgz`** from [v0.2.5](https://github.com/AshenJyy/dsh-subagent-antigravity/releases/tag/v0.2.5). Choose the release TGZ, not GitHub's source-code archive. Install it through DSH's Plugins page or the CLI for your Profile:
 
 ```powershell
-dsh plugin --profile desktop add "C:/path/to/ashenjyy-dsh-subagent-antigravity-0.2.4-win32-x64.tgz"
+dsh plugin --profile desktop add "C:/path/to/ashenjyy-dsh-subagent-antigravity-0.2.5-win32-x64.tgz"
 ```
 
 The TGZ already contains both native executables and their integrity record. Leave `runtimeDir` unset; no separate runtime installation or download is needed. The host must supply a compatible dependency set. Restart DSH if prompted.
@@ -85,7 +85,7 @@ The [architecture guide](docs/ARCHITECTURE.md) covers source responsibilities, A
 - [Documentation index](docs/README.md)
 - [Official Codex provider](https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.2-rc.1/packages/subagent/subagent-codex)
 - [DSH Subagent subsystem](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.2-rc.1/docs/subsystems/subagent.md)
-- [Pinned official ACP distribution](https://github.com/agentclientprotocol/registry/blob/06229c691d24d039e2363ba12abe5c9dfae5bc66/antigravity-acp/agent.json)
+- [Pinned official ACP distribution](https://github.com/agentclientprotocol/registry/blob/02b460362cfedf4d43b03df7aad6d79a353fe064/antigravity-acp/agent.json)
 - [Protocol and compatibility evidence](docs/ACP-VERIFICATION.md)
 
 ## Model experience

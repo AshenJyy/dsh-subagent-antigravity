@@ -1,6 +1,6 @@
 {
   "name": "@ashenjyy/dsh-subagent-antigravity",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "One-shot native Antigravity subagents for DeepSeek Harness with optional model and effort configuration",
   "license": "MIT",
   "type": "module",

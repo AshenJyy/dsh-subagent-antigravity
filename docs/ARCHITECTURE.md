@@ -25,7 +25,7 @@
 
 ## Run flow
 
-Resolve the installed native pair → spawn through `ctx.subprocess` → validate `antigravity-acp`, version `1.4.3`, ACP v1 → retain native authentication or select the configured method → create a fresh session → set and verify configured model/effort → publish the run → send one text prompt → collect the authoritative ACP terminal result → close stdin and wait → escalate managed-range termination when necessary → notify the parent after cleanup.
+Resolve the installed native pair → spawn through `ctx.subprocess` → validate `antigravity-acp`, version `1.4.5`, ACP v1 → retain native authentication or select the configured method → create a fresh session → set and verify configured model/effort → publish the run → send one text prompt → collect the authoritative ACP terminal result → close stdin and wait → escalate managed-range termination when necessary → notify the parent after cleanup.
 
 Cancellation settles locally and sends `session/cancel` best effort. Process cleanup waits for the entire managed range, including descendants. Early exit never becomes successful completion. Successful empty answers and unknown terminal reasons are errors.
 
@@ -43,11 +43,11 @@ The parent sees the launch acknowledgment and eventual assistant result or safe 
 
 ## Known limitations and deferred work
 
-- **Compatibility range:** DSH `>=0.2.1-rc.3 <0.2.2-0 || >=0.2.2-rc.1 <0.2.3-0`; subsequent RCs and stable releases within the 0.2.1 and 0.2.2 series are admitted without per-version registration. Cordis and Schemastery peers accept the matching 4.0/4.1 and 3.18/3.19 host lines. An upstream breaking change can still require an adapter update. ACP runtime `1.4.3` and ACP protocol v1 remain pinned.
+- **Compatibility range:** DSH `>=0.2.1-rc.3 <0.2.2-0 || >=0.2.2-rc.1 <0.2.3-0`; subsequent RCs and stable releases within the 0.2.1 and 0.2.2 series are admitted without per-version registration. Cordis and Schemastery peers accept the matching 4.0/4.1 and 3.18/3.19 host lines. An upstream breaking change can still require an adapter update. ACP runtime `1.4.5` and ACP protocol v1 remain pinned.
 - **Authentication evidence:** All advertised native routes are represented in configuration, but the added 0.2.0 flows were checked against source only. They were not each logged in or exercised with inference. Account and enterprise policy may make a method unavailable.
 - **OAuth can require interaction:** First login or reauthentication can open a browser. The authentication command does not make later tasks strictly noninteractive.
 - **Fresh is not ephemeral:** ACP can persist its own sessions. The adapter does not resume them, but does not claim Codex's `ephemeral: true` guarantee or erase native records.
-- **App plugins are not automatically inherited:** ACP 1.4.3 discovers shared MCP, skills, and hooks. It is a separate backend, not an attached App session; App-only plugin packages and UI features may be unavailable.
+- **App plugins are not automatically inherited:** Shared MCP, skills, and hooks were source-reviewed with ACP 1.4.3; this behavior has not been revalidated with 1.4.5. It is a separate backend, not an attached App session; App-only plugin packages and UI features may be unavailable.
 - **Local allowlists govern this adapter's selections:** Hooks, MCP servers, plugins, and Google's closed runtime can perform their own work. The adapter cannot attest that every internal or external auxiliary operation uses the selected model. Strict deployments should additionally control native hooks/plugins, tools, and server-side model access.
 - **No task-question UI:** Agent questions and unsupported client requests cannot be answered. Slash-command prompts are rejected instead of being interpreted as model or mode changes. Native authentication browser flows are separate from these task questions.
 - **Text only, one turn:** Non-text blocks are rejected; no follow-up, structured output, live DSH progress transcript, automatic retries, or side-effect rollback.

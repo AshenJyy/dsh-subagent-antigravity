@@ -22,7 +22,7 @@ runtime or its embedded third-party components. Google's applicable terms and
 the runtime's embedded notices continue to apply to those components.
 
 Official runtime source: https://dl.google.com/agy-extensions/releases
-Version: 1.4.3
-Pinned registry: https://github.com/agentclientprotocol/registry/blob/06229c691d24d039e2363ba12abe5c9dfae5bc66/antigravity-acp/agent.json
-The included native/1.4.3/<platform>/.dsh-antigravity-runtime.json record
+Version: 1.4.5
+Pinned registry: https://github.com/agentclientprotocol/registry/blob/02b460362cfedf4d43b03df7aad6d79a353fe064/antigravity-acp/agent.json
+The included native/1.4.5/<platform>/.dsh-antigravity-runtime.json record
 identifies the official archive and executable hashes.

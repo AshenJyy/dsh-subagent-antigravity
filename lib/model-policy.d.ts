@@ -1,7 +1,7 @@
 /** Optional exact model policy over the pinned runtime's advertised choices. */
 export type Effort = string;
 export declare const ACP_AGENT_NAME = "antigravity-acp";
-export declare const ACP_AGENT_VERSION = "1.4.3";
+export { DEFAULT_RUNTIME_VERSION as ACP_AGENT_VERSION } from './runtime-manifest.js';
 type JsonObject = Record<string, unknown>;
 /** Only provider-authored, payload-free errors may leave the wire adapter. */
 export declare class AntigravityProtocolError extends Error {
@@ -31,4 +31,3 @@ export declare function assertCurrent(option: SelectOption | undefined, value: s
 export declare function assertSelection(selection: ModelSelection, policy: ModelPolicy): void;
 /** Reject slash commands before submission without rewriting the user's text. */
 export declare function assertPrompt(texts: readonly string[]): void;
-export {};

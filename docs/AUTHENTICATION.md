@@ -2,7 +2,7 @@
 
 [Home](../README.md) · [Documentation](README.md) · [中文](AUTHENTICATION.zh.md)
 
-**First use requires an explicit authentication choice and setup. Installing the plugin does not open a login page, and 0.2.4 has no dedicated login button.** The complete TGZ contains the runtime; users configure their account, API key, project, and credential paths locally.
+**First use requires an explicit authentication choice and setup. Installing the plugin does not open a login page, and 0.2.5 has no dedicated login button.** The complete TGZ contains the runtime; users configure their account, API key, project, and credential paths locally.
 
 Choose authentication per provider instance. The default, `native`, leaves selection to ACP's existing settings and enterprise policy. It does not send an `authenticate` request or try methods in sequence. An explicit method must be available under the runtime's policy; failure does not select another account or route.
 
@@ -23,7 +23,7 @@ dsh-antigravity-auth --method oauth-personal --gemini-home "C:/path/to/your-acp-
 
 If the package's bin directory is not on your PATH, use `node "C:/path/to/installed/package/lib/auth-cli.js"` with the same arguments. Use the same `geminiHome` in the provider. Omit both settings to use the native home. The command accepts `--runtime-dir`, `--gemini-home`, `--project`, `--location`, `--adc-path`, `--agent-platform-mode`, and `--timeout-ms`; paths must be absolute. Its overall deadline defaults to 600000 ms, independently of the provider's startup deadline. It accepts no plaintext API-key argument. Supply keys through the selected native environment, and do not commit secrets to a Profile patch or repository.
 
-The command performs only `initialize` and, for an explicit method, `authenticate`; it creates no session and sends no prompt. A successful command is **not** proof of a usable API key, ADC, account entitlement, quota, or inference access. In `native` mode it does not validate the inherited login. ACP 1.4.3 has no supported cached-only or no-browser authentication mode: expired or missing OAuth credentials can open the native browser flow during delegation as well, subject to `startupTimeoutMs`. Complete initial login interactively, and treat later reauthentication as a possible startup failure or interaction.
+The command performs only `initialize` and, for an explicit method, `authenticate`; it creates no session and sends no prompt. A successful command is **not** proof of a usable API key, ADC, account entitlement, quota, or inference access. In `native` mode it does not validate the inherited login. The ACP 1.4.3 source review found no supported cached-only or no-browser authentication mode; 1.4.5 authentication has not been revalidated: expired or missing OAuth credentials can open the native browser flow during delegation as well, subject to `startupTimeoutMs`. Complete initial login interactively, and treat later reauthentication as a possible startup failure or interaction.
 
 ACP has its own settings and credentials. An App or `agy` login is not guaranteed to be available to ACP; this package does not copy or convert their tokens. `geminiHome` supplies `GEMINI_HOME`, the persistent native home directory itself, with ACP settings under `antigravity-acp/`. It also changes native configuration, session storage, and discovery of shared MCP, skills, and hooks; it is more than a token path. Explicit non-gateway authentication persists `auth.type` there, and Enterprise license selection can update project/location. Use separate persistent homes for provider instances that select different methods to avoid competing settings writes.
 
@@ -103,7 +103,7 @@ In a packaged application or a terminal subject to filesystem redirection, `AppD
 |---|---|
 | `The system cannot find the path specified`, pointing to the ADC file | Check the actual `adcPath` location and DSH's file access. Repeating login or restarting alone does not correct a wrong path. |
 | `Authentication required` | Check the authentication method and complete configuration. `native` does not automatically select personal login; Agent Platform ADC also needs a project, location, and discoverable credentials. |
-| 0.2.4 reports only `stage: session; category: protocol` | This wrapper is too generic and can hide an authentication failure. It does not establish protocol corruption or credential expiry. Inspect the local native diagnostic and remove sensitive information before sharing it. |
+| 0.2.5 reports only `stage: session; category: protocol` | This wrapper is too generic and can hide an authentication failure. It does not establish protocol corruption or credential expiry. Inspect the local native diagnostic and remove sensitive information before sharing it. |
 | Authentication command succeeds but a model request fails | Check account permissions, project, location, model availability, and quota. The authentication command sends no model request. |
 
-The package includes no user credentials or preset local ADC path. Version 0.2.4 does not resolve Windows application-directory redirection automatically or verify credential paths through the actual DSH child process. These instructions are not a substitute for deployment validation.
+The package includes no user credentials or preset local ADC path. Version 0.2.5 does not resolve Windows application-directory redirection automatically or verify credential paths through the actual DSH child process. These instructions are not a substitute for deployment validation.

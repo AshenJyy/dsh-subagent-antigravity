@@ -2,7 +2,7 @@
 
 [返回首页](../README.zh.md) · [文档目录](README.md) · [English](AUTHENTICATION.md)
 
-**首次使用需要主动选择认证方式并完成配置。安装插件不会自动打开登录页面，0.2.4 也没有专门的登录按钮。** 完整 TGZ 包含运行时；账号、API Key、项目和凭据路径由使用者在本机配置。
+**首次使用需要主动选择认证方式并完成配置。安装插件不会自动打开登录页面，0.2.5 也没有专门的登录按钮。** 完整 TGZ 包含运行时；账号、API Key、项目和凭据路径由使用者在本机配置。
 
 每个 Provider 实例可以选择认证方式。默认 `native` 沿用 ACP 已有设置和企业策略，不发送 `authenticate`，也不会轮流尝试不同登录方式。显式方法必须受原生运行时及其策略支持；失败不会改用其他账号或路线。
 
@@ -23,7 +23,7 @@ dsh-antigravity-auth --method oauth-personal --gemini-home "C:/path/to/your-acp-
 
 若安装包的 bin 目录不在 PATH 中，可用 `node "C:/path/to/installed/package/lib/auth-cli.js"` 携带相同参数执行。Provider 中设置相同的 `geminiHome`；两处都省略则使用原生目录。命令支持 `--runtime-dir`、`--gemini-home`、`--project`、`--location`、`--adc-path`、`--agent-platform-mode`、`--timeout-ms`，路径须为绝对路径。命令总期限默认为 600000 毫秒，与 Provider 的启动期限独立。命令不接收明文 API Key 参数；通过对应的原生环境提供密钥，不要提交到 Profile 补丁或仓库。
 
-认证命令只执行 `initialize`，以及显式方法的 `authenticate`，不建会话、不发送 prompt。命令成功**不能证明** API Key、ADC、账号权益、配额或推理可用；`native` 模式也不会验证继承的登录是否有效。ACP 1.4.3 没有受支持的“仅使用缓存”或“禁止打开浏览器”认证模式：OAuth 缺失或失效时，委派任务仍可能触发原生浏览器流程，并受 `startupTimeoutMs` 限制。首次登录建议主动完成，后续也需考虑重新认证导致的启动交互或失败。
+认证命令只执行 `initialize`，以及显式方法的 `authenticate`，不建会话、不发送 prompt。命令成功**不能证明** API Key、ADC、账号权益、配额或推理可用；`native` 模式也不会验证继承的登录是否有效。此前 ACP 1.4.3 源码审阅未发现受支持的“仅使用缓存”或“禁止打开浏览器”认证模式，1.4.5 认证尚未重新验证：OAuth 缺失或失效时，委派任务仍可能触发原生浏览器流程，并受 `startupTimeoutMs` 限制。首次登录建议主动完成，后续也需考虑重新认证导致的启动交互或失败。
 
 ACP 使用独立的设置与凭据存储。App 或 `agy` 已登录，不代表 ACP 必然能复用；本包不会复制或转换它们的 token。`geminiHome` 设置 `GEMINI_HOME`，指向持久的原生目录本身，ACP 设置保存在其 `antigravity-acp/` 下。它还影响原生配置、会话存储和共享 MCP、skills、hooks 的发现，并非仅是 token 路径。显式非网关认证会写入 `auth.type`，企业许可选择还可能更新项目及区域。使用不同认证方式的 Provider 应配置不同的持久目录，避免相互覆盖认证选择。
 
@@ -103,7 +103,7 @@ gcloud auth application-default set-quota-project YOUR_PROJECT_ID
 |---|---|
 | `The system cannot find the path specified`，并指向 ADC 文件 | 核对 `adcPath` 的实际位置和 DSH 的文件访问范围。单纯重新登录或重启不会修正错误路径。 |
 | `Authentication required` | 检查认证方式及完整配置。`native` 不会自动选择个人登录；Agent Platform ADC 还需要项目、区域及可发现的凭据。 |
-| 0.2.4 只显示 `stage: session; category: protocol` | 这是过于笼统的包装错误，可能包含认证失败；不能据此断定协议损坏或凭据过期。查看本机原生日志中的原因，分享时先移除敏感信息。 |
+| 0.2.5 只显示 `stage: session; category: protocol` | 这是过于笼统的包装错误，可能包含认证失败；不能据此断定协议损坏或凭据过期。查看本机原生日志中的原因，分享时先移除敏感信息。 |
 | 认证命令成功，模型请求仍失败 | 继续检查账号权限、项目、区域、模型可用性和配额。认证命令不发送模型请求。 |
 
-本包不包含用户凭据或预设的本机 ADC 路径。0.2.4 不会自动解析 Windows 应用目录映射，也没有用实际 DSH 子进程验证凭据路径的功能；README 中的步骤不能代替实际部署验证。
+本包不包含用户凭据或预设的本机 ADC 路径。0.2.5 不会自动解析 Windows 应用目录映射，也没有用实际 DSH 子进程验证凭据路径的功能；README 中的步骤不能代替实际部署验证。

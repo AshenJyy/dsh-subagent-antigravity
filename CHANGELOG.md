@@ -6,6 +6,14 @@ Entries describe published release behavior. Documentation on the main branch ma
 
 以下记录已发布版本的行为。主分支文档可能比已有 TGZ 内的说明更新；各版本的核对依据与验证范围见 [ACP 记录](docs/ACP-VERIFICATION.md)。
 
+## [0.2.5](https://github.com/AshenJyy/dsh-subagent-antigravity/releases/tag/v0.2.5)
+
+- Update the bundled official ACP Server and matching native harness from 1.4.3 to 1.4.5, pinned to ACP Registry commit `02b460362cfedf4d43b03df7aad6d79a353fe064` and its published archive hashes.
+- Share the runtime version constant with the ACP identity check so the installed payload and protocol validation remain aligned.
+- Preserve Harness compatibility, host peers, authentication choices, unrestricted model/effort configuration, and no-fallback behavior. This release does not claim verified Carbon inference.
+
+将 Windows 完整包内置的 ACP Server 和配套原生 harness 升级至 1.4.5，同步官方摘要及协议版本校验；保留宿主兼容范围、登录与模型配置方式。本次未验证 Carbon 推理。
+
 ## [0.2.4](https://github.com/AshenJyy/dsh-subagent-antigravity/releases/tag/v0.2.4)
 
 - Add the Harness 0.2.2 series from rc.1, while retaining 0.2.1 support from rc.3. Each series accepts subsequent RCs and its stable release; 0.2.3 remains excluded.

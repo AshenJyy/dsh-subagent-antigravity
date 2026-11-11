@@ -3,7 +3,7 @@
 export type Effort = string
 
 export const ACP_AGENT_NAME = 'antigravity-acp'
-export const ACP_AGENT_VERSION = '1.4.3'
+export { DEFAULT_RUNTIME_VERSION as ACP_AGENT_VERSION } from './runtime-manifest.js'
 
 type JsonObject = Record<string, unknown>
 

@@ -1,5 +1,5 @@
 /**
- * Minimal Antigravity ACP 1.4.3 adapter, following the MIT-licensed
+ * Minimal Antigravity ACP 1.4.5 adapter, following the MIT-licensed
  * @deepseek-ai/dsh-subagent-codex 0.2.1-rc.5 wire's separation of transport,
  * product protocol, permissions, cancellation, and answer selection.
  * The shared JSON-RPC transport owns framing and request correlation.
