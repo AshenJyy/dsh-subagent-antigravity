@@ -11,15 +11,15 @@ kind: "package-bundle"
 
 ## 概述
 
-将 DeepSeek Harness 委派的文本任务交给 **Google Antigravity ACP Server 1.4.5**。每次任务启动独立原生进程和新会话，推理与工具执行由 Antigravity 完成，DSH 负责派发、取消和结果通知。
+将 DeepSeek Harness 委派的文本任务交给 **Antigravity CLI 1.5.5 的 `agy acp` 入口**。每次任务启动独立原生进程和新会话，推理与工具执行由 Antigravity 完成，DSH 负责派发、取消和结果通知。
 
-架构沿用官方 [Codex 子智能体提供方](https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.2-rc.1/packages/subagent/subagent-codex)。这是社区集成，直接使用 ACP Server，无需安装 `agy` CLI 或 Antigravity App。
+架构沿用官方 [Codex 子智能体提供方](https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.2-rc.1/packages/subagent/subagent-codex)。这是社区集成，通过 stdio 启动 `agy acp`。发行包内置官方 CLI，也可用 `agyPath` 指定已有 CLI，无需运行 Antigravity App。
 
 | 项目 | 支持范围 |
 |---|---|
 | 平台 | Windows x64 |
 | DeepSeek Harness | `0.2.1` 从 rc.3 起，`0.2.2` 从 rc.1 起；包含各系列后续 RC 和正式版 |
-| 原生运行时 | ACP Server 1.4.5 及配套 harness，已内置于发行 TGZ |
+| 原生运行时 | 官方 agy CLI 1.5.5，已内置于发行 TGZ；也可指定已有 CLI |
 | 宿主依赖 | DSH 包、Cordis、Schemastery 由宿主/Profile 提供 |
 | 模型与 effort | 原生默认值或 ACP 支持的显式值，默认不限制、不回退 |
 
@@ -38,23 +38,23 @@ kind: "package-bundle"
 
 ### 安装 Bundle
 
-从 [v0.2.5](https://github.com/AshenJyy/dsh-subagent-antigravity/releases/tag/v0.2.5) 下载 **`ashenjyy-dsh-subagent-antigravity-0.2.5-win32-x64.tgz`**，请选择发行 TGZ，而非 GitHub 自动生成的源码压缩包。通过 DSH 插件页安装，或在 CLI 中指定实际使用的 Profile：
+从 [v0.3.0](https://github.com/AshenJyy/dsh-subagent-antigravity/releases/tag/v0.3.0) 下载 **`ashenjyy-dsh-subagent-antigravity-0.3.0-win32-x64.tgz`**，请选择发行 TGZ，而非 GitHub 自动生成的源码压缩包。通过 DSH 插件页安装，或在 CLI 中指定实际使用的 Profile：
 
 ```powershell
-dsh plugin --profile desktop add "C:/path/to/ashenjyy-dsh-subagent-antigravity-0.2.5-win32-x64.tgz"
+dsh plugin --profile desktop add "C:/path/to/ashenjyy-dsh-subagent-antigravity-0.3.0-win32-x64.tgz"
 ```
 
-TGZ 已包含两个原生程序及校验记录。省略 `runtimeDir` 即可使用，无需单独安装或下载运行时。宿主须提供相容的依赖组合；DSH 提示重启时请重启。
+TGZ 已包含官方 `agy.exe` 及校验记录。省略 `runtimeDir` 和 `agyPath` 即可使用，无需另外安装。要跟随本机 CLI 的更新，可将 `agyPath` 设为已有 `agy.exe` 的绝对路径。宿主须提供相容的依赖组合；DSH 提示重启时请重启。
 
 ### 身份验证
 
-**安装不会自动弹出登录页，请先配置认证再执行任务。** 默认 `native` 使用 ACP 已保存的选择及企业策略，不会自动选择个人账号登录。App 或 `agy` 的登录状态不保证能直接继承。
+**安装不会自动弹出登录页，请先配置认证再执行任务。** 默认 `native` 不发送认证请求，复用 agy CLI 已保存的登录和配置。请使用相同 Windows 用户及原生目录；App/IDE 共享登录由 Google 原生凭据管理处理，本插件不复制令牌。
 
-可以选择 Google 个人账号 OAuth、Gemini Enterprise OAuth、Gemini API Key、Agent Platform ADC/Express、企业网关，或已有原生配置。具体可用方式由账号及管理员策略决定。
+可选择 CLI 现有登录、个人 Google OAuth、Gemini Enterprise OAuth、Gemini API Key 或 Agent Platform。显式方法须由运行中的 CLI 公布；保留旧网关配置不表示 CLI 一定支持。
 
 <a id="windows-desktop-首次登录步骤"></a>
 
-**[登录指南](docs/AUTHENTICATION.zh.md)** 提供 Windows 登录命令、插件配置和 ADC 路径排错步骤。从 0.1.0 升级并保留原 ADC 路线时，设置 `authMethod: agent-platform` 和 `agentPlatformMode: adc`。
+**[登录指南](docs/AUTHENTICATION.zh.md)** 提供 Windows 登录命令、插件配置和 ADC 路径排错步骤。保留显式 ADC 路线时设置 `authMethod: agent-platform` 和 `agentPlatformMode: adc`；复用 agy 当前登录时，两项都选 `native`。
 
 ### 配置
 
@@ -74,7 +74,7 @@ Bundle 自动注册提供方和全局工具 **`subagent_antigravity`**。[工具
 
 <a id="windows-凭据路径排查"></a>
 
-缺失运行时、认证失败及不支持的模型配置会明确失败。不会自动重试任务、替换模型、回退到 CLI 或撤销已经产生的副作用。会话或凭据错误可先查阅 [Windows 排错说明](docs/AUTHENTICATION.zh.md#windows-凭据路径排查)。
+缺失运行时、认证失败及不支持的模型配置会明确失败。不会自动重试任务、替换模型、切换其他执行入口 或撤销已经产生的副作用。会话或凭据错误可先查阅 [Windows 排错说明](docs/AUTHENTICATION.zh.md#windows-凭据路径排查)。
 
 ## 理解实现
 
@@ -85,8 +85,10 @@ Bundle 自动注册提供方和全局工具 **`subagent_antigravity`**。[工具
 - [文档目录](docs/README.md)
 - [官方 Codex 提供方](https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.2-rc.1/packages/subagent/subagent-codex)
 - [DSH 子智能体子系统](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.2-rc.1/docs/subsystems/subagent.md)
-- [固定版本官方 ACP 发行记录](https://github.com/agentclientprotocol/registry/blob/02b460362cfedf4d43b03df7aad6d79a353fe064/antigravity-acp/agent.json)
+- [官方 agy ACP 接口](https://antigravity.google/docs/ide/extensions/acp)
 - [协议与兼容性记录](docs/ACP-VERIFICATION.md)
+
+已通过 agy 1.5.5 缓存登录创建会话并确认 Carbon + low 设置；未执行模型推理，见[验证记录](docs/ACP-VERIFICATION.md)。
 
 ## 模型体验
 
@@ -98,7 +100,7 @@ Bundle 自动注册提供方和全局工具 **`subagent_antigravity`**。[工具
 
 ## 开发备注
 
-使用 Windows x64 和 Node.js 22 或以上版本：
+完整包构建使用 Windows x64 和 Node.js 24：
 
 ```sh
 npm ci --ignore-scripts

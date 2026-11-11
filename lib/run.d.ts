@@ -9,6 +9,7 @@ export interface AntigravityRunSpec extends AuthenticationConfig {
     allowedEfforts?: readonly string[];
     disabledTools?: readonly string[];
     runtimeDir?: string;
+    agyPath?: string;
     permissionMode: 'deny' | 'allow-once';
     env: Record<string, string>;
     disposeGraceMs: number;

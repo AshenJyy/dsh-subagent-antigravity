@@ -1,5 +1,5 @@
 /**
- * Minimal Antigravity ACP 1.4.5 adapter, following the MIT-licensed
+ * Minimal agy acp adapter, following the MIT-licensed
  * @deepseek-ai/dsh-subagent-codex 0.2.1-rc.5 wire's separation of transport,
  * product protocol, permissions, cancellation, and answer selection.
  * The shared JSON-RPC transport owns framing and request correlation.
@@ -13,7 +13,7 @@ import { JsonRpcLineTransport } from '@deepseek-ai/dsh-sdk-protocol'
 import { AUTH_METHODS, type AuthMethod } from './auth.js'
 import {
   ACP_AGENT_NAME,
-  ACP_AGENT_VERSION,
+  supportedAgyVersion,
   AntigravityProtocolError,
   assertCurrent,
   assertPrompt,
@@ -71,6 +71,7 @@ export class AntigravityWire {
     readonly model: string | undefined
     readonly effort: string | undefined
   } | undefined
+  private readonly legacyModelIds = new Set<string>()
   private initialized = false
   private sessionStarting = false
   private ready = false
@@ -131,12 +132,12 @@ export class AntigravityWire {
     const authMethod = this.options.authMethod ?? 'native'
     const response = record(await this.request('initialize', {
       protocolVersion: 1,
-      clientCapabilities: authMethod === 'gateway' ? { auth: { _meta: { gateway: true } } } : {},
+      clientCapabilities: {},
       clientInfo: { name: 'deepseek-harness-subagent-antigravity', version: CLIENT_VERSION },
     }, signal))
     const info = record(response.agentInfo)
     if (response.protocolVersion !== 1 || info.name !== ACP_AGENT_NAME
-      || info.version !== ACP_AGENT_VERSION) {
+      || !supportedAgyVersion(info.version)) {
       throw new AntigravityProtocolError('unsupported ACP runtime identity or version')
     }
     if (authMethod !== 'native') {
@@ -144,12 +145,7 @@ export class AntigravityWire {
         throw new AntigravityProtocolError('ACP did not advertise authentication methods')
       }
       const advertised = response.authMethods.some(method => record(method).id === authMethod)
-      // The pinned runtime advertises no buttons under required enterprise
-      // gateway policy. An explicit gateway selection may still authenticate
-      // when the caller enabled the native gateway gate in the child process.
-      const requiredGateway = authMethod === 'gateway' && response.authMethods.length === 0
-        && this.options.gatewayAuthEnabled === true
-      if (!advertised && !requiredGateway) {
+      if (!advertised) {
         throw new AntigravityProtocolError('configured authentication method is unavailable')
       }
       record(await this.request('authenticate', { methodId: authMethod }, signal))
@@ -164,12 +160,12 @@ export class AntigravityWire {
       throw new AntigravityProtocolError('invalid session lifecycle')
     }
     this.sessionStarting = true
+    if (this.options.disabledTools?.length) {
+      throw new AntigravityProtocolError('agy acp does not advertise disabledTools support')
+    }
     const session = record(await this.request('session/new', {
       cwd,
       mcpServers: [],
-      ...(this.options.disabledTools?.length
-        ? { _meta: { antigravity: { disabledTools: [...this.options.disabledTools] } } }
-        : {}),
     }, signal))
     const id = identifier(session.sessionId)
     if (this.provisionalSessionId !== undefined && this.provisionalSessionId !== id) {
@@ -177,12 +173,15 @@ export class AntigravityWire {
     }
     this.sessionId = id
     let selection = readSelection(session.configOptions)
-    assertCurrent(selection.mode, 'default')
+    requireChoice(selection.mode, 'default', 'mode')
     // Legacy notifications carry concrete IDs, while configOptions may expose
     // model families. Bind only a pair the server actually reports together;
     // never infer a family or effort by splitting a model identifier.
     if (session.models !== undefined && session.models !== null) {
       const models = record(session.models)
+      if (Array.isArray(models.availableModels) && models.availableModels.length <= 1024) {
+        for (const entry of models.availableModels) this.legacyModelIds.add(identifier(record(entry).modelId))
+      }
       if (validChoice(models.currentModelId)) {
         this.knownLegacyModel = {
           id: models.currentModelId,
@@ -191,22 +190,31 @@ export class AntigravityWire {
         }
       }
     }
-    if (this.options.model !== undefined) {
-      requireChoice(selection.model, this.options.model)
+    if (selection.mode?.currentValue !== 'default') {
+      const mode = record(await this.setOption('mode', 'default', signal))
+      selection = readSelection(mode.configOptions)
+      assertCurrent(selection.mode, 'default', 'mode')
+    }
+    if (this.options.model !== undefined && selection.model?.currentValue !== this.options.model) {
+      requireChoice(selection.model, this.options.model, 'model')
       const model = record(await this.setOption('model', this.options.model, signal))
       selection = readSelection(model.configOptions)
-      assertCurrent(selection.model, this.options.model)
-      assertCurrent(selection.mode, 'default')
+      assertCurrent(selection.model, this.options.model, 'model')
+      assertCurrent(selection.mode, 'default', 'mode')
     }
-    if (this.options.effort !== undefined) {
-      requireChoice(selection.effort, this.options.effort)
-      const thinking = record(await this.setOption('thinking_level', this.options.effort, signal))
+    if (this.options.effort !== undefined && selection.effort?.currentValue !== this.options.effort) {
+      requireChoice(selection.effort, this.options.effort, 'effort')
+      const thinking = record(await this.setOption('thought_level', this.options.effort, signal))
       selection = readSelection(thinking.configOptions)
-      assertCurrent(selection.effort, this.options.effort)
+      assertCurrent(selection.effort, this.options.effort, 'effort')
     }
-    const mode = record(await this.setOption('mode', 'default', signal))
-    selection = readSelection(mode.configOptions)
     this.verifySelection(selection)
+    // CLI documents concrete slugs as family + effort. Bind only a concrete
+    // slug that was advertised and whose family/effort were read back above.
+    const concrete = `${selection.model?.currentValue}-${selection.effort?.currentValue}`
+    if (this.legacyModelIds.has(concrete)) {
+      this.knownLegacyModel = { id: concrete, model: selection.model?.currentValue, effort: selection.effort?.currentValue }
+    }
     this.assertOpen()
     this.ready = true
   }
@@ -321,7 +329,7 @@ export class AntigravityWire {
 
   private verifySelection(selection: ModelSelection): void {
     assertSelection(selection, this.options)
-    assertCurrent(selection.mode, 'default')
+    assertCurrent(selection.mode, 'default', 'mode')
     if (this.knownLegacyModel !== undefined
       && (this.knownLegacyModel.model !== selection.model?.currentValue
         || this.knownLegacyModel.effort !== selection.effort?.currentValue)) {
@@ -353,17 +361,20 @@ export class AntigravityWire {
     const update = record(params.update)
     switch (update.sessionUpdate) {
       case 'config_option_update':
-        // The server emits this for its own replacements, not for our setters.
-        this.verifySelection(readSelection(update.configOptions))
+        // agy emits notifications for our setters too. Intermediate choices
+        // are not the final policy; no prompt or tool approval occurs yet.
+        // Setter replies are checked before publication; later drift fails.
+        if (this.ready) this.verifySelection(readSelection(update.configOptions))
+        else readSelection(update.configOptions)
         return
       case 'current_model_update':
         identifier(update.currentModelId)
-        if (this.hasModelPolicy && update.currentModelId !== this.knownLegacyModel?.id) {
+        if (this.ready && this.hasModelPolicy && update.currentModelId !== this.knownLegacyModel?.id) {
           throw new AntigravityProtocolError('ACP legacy model update cannot verify the configured model policy')
         }
         return
       case 'current_mode_update':
-        if (update.currentModeId !== 'default') {
+        if (this.ready && update.currentModeId !== 'default') {
           throw new AntigravityProtocolError('ACP permission mode drifted')
         }
         return

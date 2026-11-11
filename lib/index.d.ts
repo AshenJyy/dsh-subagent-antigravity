@@ -24,8 +24,10 @@ export interface Config extends AuthenticationConfig {
     allowedEfforts?: string[];
     /** Optional native tool identifiers disabled for this provider's sessions. */
     disabledTools?: string[];
-    /** Absolute installation directory prepared by dsh-antigravity-install. */
+    /** Absolute pinned CLI directory prepared by dsh-antigravity-install. */
     runtimeDir?: string;
+    /** Absolute deployment-owned agy.exe; omitted uses the bundled CLI. */
+    agyPath?: string;
     permissionMode?: AntigravityPermissionMode;
     disposeGraceMs?: number;
     disposeEofGraceMs?: number;

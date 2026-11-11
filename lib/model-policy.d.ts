@@ -1,11 +1,15 @@
 /** Optional exact model policy over the pinned runtime's advertised choices. */
 export type Effort = string;
-export declare const ACP_AGENT_NAME = "antigravity-acp";
-export { DEFAULT_RUNTIME_VERSION as ACP_AGENT_VERSION } from './runtime-manifest.js';
+export declare const ACP_AGENT_NAME = "Antigravity ACP Server";
+/** Admit stable CLI 1.x from the inspected baseline; ACP shape is still checked. */
+export declare function supportedAgyVersion(value: unknown): boolean;
 type JsonObject = Record<string, unknown>;
+type ChoiceKind = 'model' | 'effort' | 'mode' | 'configuration';
+type ChoiceFailure = `${ChoiceKind}-unavailable`;
 /** Only provider-authored, payload-free errors may leave the wire adapter. */
 export declare class AntigravityProtocolError extends Error {
-    constructor(message: string);
+    readonly reason?: ChoiceFailure | undefined;
+    constructor(message: string, reason?: ChoiceFailure | undefined);
 }
 export declare function record(value: unknown): JsonObject;
 export interface ModelPolicy {
@@ -26,8 +30,9 @@ export interface ModelSelection {
 }
 /** Validate availability before selecting; this does not prove backend access. */
 export declare function readSelection(options: unknown): ModelSelection;
-export declare function requireChoice(option: SelectOption | undefined, value: string): void;
-export declare function assertCurrent(option: SelectOption | undefined, value: string): void;
+export declare function requireChoice(option: SelectOption | undefined, value: string, kind?: ChoiceKind): void;
+export declare function assertCurrent(option: SelectOption | undefined, value: string, kind?: ChoiceKind): void;
 export declare function assertSelection(selection: ModelSelection, policy: ModelPolicy): void;
 /** Reject slash commands before submission without rewriting the user's text. */
 export declare function assertPrompt(texts: readonly string[]): void;
+export {};

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Build the Windows x64 bundle from a verified official archive, never a user's login home. */
+/** Build the Windows x64 bundle from a verified official CLI binary, never a login home. */
 import { createHash } from 'node:crypto'
 import { createReadStream } from 'node:fs'
 import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
@@ -13,10 +13,10 @@ function options(args) {
   const result = { outputDir: root }
   for (let i = 0; i < args.length; i += 1) {
     const arg = args[i]
-    if (arg === '--archive' || arg === '--output-dir') {
+    if (arg === '--binary' || arg === '--output-dir') {
       const value = args[++i]
       if (!value || value.startsWith('--')) throw new Error(`Missing value for ${arg}`)
-      result[arg === '--archive' ? 'archive' : 'outputDir'] = resolve(value)
+      result[arg === '--binary' ? 'binary' : 'outputDir'] = resolve(value)
     } else throw new Error(`Unknown packaging option: ${arg}`)
   }
   return result
@@ -72,22 +72,22 @@ async function main() {
     const nativeRelative = `native/${DEFAULT_RUNTIME_VERSION}/${asset.platform}`
     const nativeDirectory = join(stage, nativeRelative)
     const installArgs = [join(root, 'lib/install.js'), '--runtime-dir', nativeDirectory]
-    if (opts.archive) installArgs.push('--archive', opts.archive)
-    // Installer verifies the official ZIP digest and records the exact extracted pair.
+    if (opts.binary) installArgs.push('--binary', opts.binary)
+    // Installer verifies the exact official CLI payload against its SHA-512.
     await run(installArgs, root)
-    manifest.files.push(...[asset.executable, asset.harness, RUNTIME_RECORD].map(file => `${nativeRelative}/${file}`))
+    manifest.files.push(...[asset.executable, RUNTIME_RECORD].map(file => `${nativeRelative}/${file}`))
     manifest.os = [process.platform]
     manifest.cpu = [process.arch]
     manifest.license = 'SEE LICENSE IN NOTICE'
     // Exact development pins belong to the source checkout, not the host-facing bundle.
     delete manifest.devDependencies
-    manifest.antigravityRuntime = { version: DEFAULT_RUNTIME_VERSION, platform: asset.platform, archiveSha256: asset.sha256 }
+    manifest.antigravityRuntime = { kind: 'agy-cli', version: DEFAULT_RUNTIME_VERSION, platform: asset.platform, sha512: asset.sha512 }
     await writeFile(join(stage, 'package.json'), `${JSON.stringify(manifest, null, 2)}\n`)
     // Do not run package lifecycle hooks in the clean staging directory.
     const [packed] = JSON.parse(await run([npmCli, 'pack', '--ignore-scripts', '--json'], stage, true))
     if (!packed?.filename || basename(packed.filename) !== packed.filename) throw new Error('npm returned an invalid archive name')
     const contents = new Set(packed.files.map(file => file.path))
-    for (const file of [asset.executable, asset.harness, RUNTIME_RECORD]) {
+    for (const file of [asset.executable, RUNTIME_RECORD]) {
       if (!contents.has(`${nativeRelative}/${file}`)) {
         throw new Error(`Packed archive is missing ${file}`)
       }

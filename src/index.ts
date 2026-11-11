@@ -43,8 +43,10 @@ export interface Config extends AuthenticationConfig {
   allowedEfforts?: string[]
   /** Optional native tool identifiers disabled for this provider's sessions. */
   disabledTools?: string[]
-  /** Absolute installation directory prepared by dsh-antigravity-install. */
+  /** Absolute pinned CLI directory prepared by dsh-antigravity-install. */
   runtimeDir?: string
+  /** Absolute deployment-owned agy.exe; omitted uses the bundled CLI. */
+  agyPath?: string
   permissionMode?: AntigravityPermissionMode
   disposeGraceMs?: number
   disposeEofGraceMs?: number
@@ -66,6 +68,7 @@ export const Config: z<Config> = z.object({
   gcpLocation: z.string().min(1),
   adcPath: z.string().min(1),
   runtimeDir: z.string().min(1),
+  agyPath: z.string().min(1),
   permissionMode: z.union(['deny', 'allow-once'] as const).default('deny'),
   env: z.dict(z.string()).default({}),
   disposeGraceMs: z.number().default(3_000),
@@ -75,7 +78,7 @@ export const Config: z<Config> = z.object({
 })
 
 type OptionalConfigFields = 'model' | 'effort' | 'allowedModels' | 'allowedEfforts'
-  | 'disabledTools' | 'gcpProject' | 'gcpLocation' | 'adcPath' | 'geminiHome' | 'runtimeDir'
+  | 'disabledTools' | 'gcpProject' | 'gcpLocation' | 'adcPath' | 'geminiHome' | 'runtimeDir' | 'agyPath'
 type ResolvedConfig = Required<Omit<Config, OptionalConfigFields>>
   & Pick<Config, OptionalConfigFields>
 
@@ -135,6 +138,7 @@ function resolveConfig(config: Config): ResolvedConfig {
     gcpLocation: optionalText(config.gcpLocation, 'gcpLocation'),
     adcPath: optionalAbsolutePath(config.adcPath, 'adcPath'),
     runtimeDir: optionalAbsolutePath(config.runtimeDir, 'runtimeDir'),
+    agyPath: optionalAbsolutePath(config.agyPath, 'agyPath'),
     permissionMode,
     env: { ...suppliedEnv },
     disposeGraceMs: config.disposeGraceMs ?? 3_000,
@@ -144,6 +148,12 @@ function resolveConfig(config: Config): ResolvedConfig {
   }
   if (resolved.authMethod !== 'agent-platform' && resolved.agentPlatformMode !== 'native') {
     throw new Error('subagent-antigravity: adc or api-key agentPlatformMode requires authMethod=agent-platform')
+  }
+  if (resolved.agyPath !== undefined && resolved.runtimeDir !== undefined) {
+    throw new Error('subagent-antigravity: choose agyPath or runtimeDir, not both')
+  }
+  if (resolved.disabledTools?.length) {
+    throw new Error('subagent-antigravity: agy acp does not advertise disabledTools; configure native permission rules instead')
   }
   for (const field of ['disposeGraceMs', 'disposeEofGraceMs', 'startupTimeoutMs'] as const) {
     assertPositiveFinite('subagent-antigravity', field, resolved[field])
@@ -189,6 +199,7 @@ class AntigravityProvider implements SubagentProvider {
       ...(this.config.gcpLocation === undefined ? {} : { gcpLocation: this.config.gcpLocation }),
       ...(this.config.adcPath === undefined ? {} : { adcPath: this.config.adcPath }),
       ...(this.config.runtimeDir === undefined ? {} : { runtimeDir: this.config.runtimeDir }),
+      ...(this.config.agyPath === undefined ? {} : { agyPath: this.config.agyPath }),
       permissionMode: this.config.permissionMode,
       env: { ...this.config.env },
       disposeGraceMs: this.config.disposeGraceMs,

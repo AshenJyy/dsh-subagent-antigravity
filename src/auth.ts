@@ -12,7 +12,7 @@ export interface AuthenticationConfig {
   authMethod?: AuthMethod
   /** Only used with authMethod=agent-platform; native preserves Express precedence. */
   agentPlatformMode?: AgentPlatformMode
-  /** Absolute persistent .gemini directory; this is not its parent directory. */
+  /** Absolute native home passed to agy acp --gemini-dir. */
   geminiHome?: string
   gcpProject?: string
   gcpLocation?: string

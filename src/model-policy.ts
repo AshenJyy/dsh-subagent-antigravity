@@ -2,14 +2,22 @@
 
 export type Effort = string
 
-export const ACP_AGENT_NAME = 'antigravity-acp'
-export { DEFAULT_RUNTIME_VERSION as ACP_AGENT_VERSION } from './runtime-manifest.js'
+export const ACP_AGENT_NAME = 'Antigravity ACP Server'
+
+/** Admit stable CLI 1.x from the inspected baseline; ACP shape is still checked. */
+export function supportedAgyVersion(value: unknown): boolean {
+  if (typeof value !== 'string') return false
+  const match = /^1\.(\d+)\.(\d+)(?:\+[0-9A-Za-z.-]+)?$/.exec(value)
+  return match !== null && (Number(match[1]) > 5 || (Number(match[1]) === 5 && Number(match[2]) >= 5))
+}
 
 type JsonObject = Record<string, unknown>
+type ChoiceKind = 'model' | 'effort' | 'mode' | 'configuration'
+type ChoiceFailure = `${ChoiceKind}-unavailable`
 
 /** Only provider-authored, payload-free errors may leave the wire adapter. */
 export class AntigravityProtocolError extends Error {
-  constructor(message: string) {
+  constructor(message: string, readonly reason?: ChoiceFailure) {
     super(`subagent-antigravity: ${message}`)
     this.name = 'AntigravityProtocolError'
   }
@@ -92,27 +100,30 @@ export function readSelection(options: unknown): ModelSelection {
   const entries = options.map(record)
   return {
     model: selectOption(entries, 'model'),
-    effort: selectOption(entries, 'thinking_level'),
+    effort: selectOption(entries, 'thought_level'),
     mode: selectOption(entries, 'mode'),
   }
 }
 
-export function requireChoice(option: SelectOption | undefined, value: string): void {
+export function requireChoice(option: SelectOption | undefined, value: string, kind: ChoiceKind = 'configuration'): void {
   if (option === undefined || !option.values.has(value)) {
-    throw new AntigravityProtocolError('configured ACP choice is unavailable')
+    throw new AntigravityProtocolError(
+      `configured ${kind} is not advertised by the ACP runtime; no fallback was attempted`,
+      `${kind}-unavailable`,
+    )
   }
 }
 
-export function assertCurrent(option: SelectOption | undefined, value: string): void {
-  requireChoice(option, value)
+export function assertCurrent(option: SelectOption | undefined, value: string, kind: ChoiceKind = 'configuration'): void {
+  requireChoice(option, value, kind)
   if (option?.currentValue !== value) {
     throw new AntigravityProtocolError('ACP did not retain the configured choice')
   }
 }
 
 export function assertSelection(selection: ModelSelection, policy: ModelPolicy): void {
-  if (policy.model !== undefined) assertCurrent(selection.model, policy.model)
-  if (policy.effort !== undefined) assertCurrent(selection.effort, policy.effort)
+  if (policy.model !== undefined) assertCurrent(selection.model, policy.model, 'model')
+  if (policy.effort !== undefined) assertCurrent(selection.effort, policy.effort, 'effort')
   if (policy.allowedModels !== undefined
     && (selection.model === undefined || !policy.allowedModels.includes(selection.model.currentValue))) {
     throw new AntigravityProtocolError('ACP model is outside the configured allowlist')

@@ -12,10 +12,11 @@ import { AntigravityWire } from './wire.js'
 
 interface Options extends AuthenticationConfig {
   runtimeDir?: string
+  agyPath?: string
   timeoutMs: number
 }
 
-const HELP = `Select or establish authentication in the official Antigravity ACP runtime.
+const HELP = `Select or establish authentication through the official agy acp runtime.
 
 Usage: dsh-antigravity-auth --method METHOD [options]
 
@@ -24,6 +25,7 @@ Methods: ${AUTH_METHODS.join(', ')}
 
 Options:
   --runtime-dir ABSOLUTE_DIRECTORY
+  --agy-path ABSOLUTE_EXE                Use an installed agy CLI
   --gemini-home ABSOLUTE_DIRECTORY
   --project PROJECT_ID                   Agent Platform project
   --location REGION                      Agent Platform location
@@ -33,10 +35,11 @@ Options:
 
 OAuth uses the runtime's browser login and native credential store when needed.
 Use GEMINI_API_KEY for Gemini Developer API and GOOGLE_API_KEY for Agent Platform
-Express. Gateway uses the native AGY_LLM_GATEWAY_* variables and administrator
-policy. Secrets are not accepted as command-line arguments.
+Express when supported by the CLI. Explicit methods must be advertised by the
+running CLI; legacy gateway selection may be unavailable. Secrets are not accepted
+as command-line arguments.
 
-Use the same GEMINI_HOME and environment for setup and DSH. This command sends
+Use the same native home, CLI and environment for setup and DSH. This command sends
 initialize and, for an explicit method, authenticate. It creates no session and
 sends no model prompt. Success does not prove key validity, quota or inference
 access. Agent Platform ADC itself is established separately with gcloud.
@@ -59,6 +62,7 @@ function parseOptions(args: readonly string[]): Options | undefined {
     switch (flag) {
       case '--method': options.authMethod = resolveAuthMethod(value); break
       case '--runtime-dir': options.runtimeDir = value; break
+      case '--agy-path': options.agyPath = value; break
       case '--gemini-home': options.geminiHome = value; break
       case '--project': options.gcpProject = value; break
       case '--location': options.gcpLocation = value; break
@@ -74,7 +78,7 @@ function parseOptions(args: readonly string[]): Options | undefined {
     }
   }
   if (!seen.has('--method')) throw new Error('Choose an explicit --method; see --help')
-  for (const path of [options.runtimeDir, options.geminiHome, options.adcPath]) {
+  for (const path of [options.runtimeDir, options.agyPath, options.geminiHome, options.adcPath]) {
     if (path !== undefined && (!path.trim() || !isAbsolute(path))) {
       throw new Error('Runtime, Gemini home and ADC paths must be absolute')
     }
@@ -120,7 +124,7 @@ async function main(): Promise<void> {
   const options = parseOptions(process.argv.slice(2))
   if (!options) return
   if (options.adcPath) await access(options.adcPath)
-  const runtime = await resolveRuntime(options.runtimeDir)
+  const runtime = await resolveRuntime(options.runtimeDir, options.agyPath, options.geminiHome)
   const env = { ...process.env, ...authenticationEnvironment(options), ...runtime.env }
   for (const key of Object.keys(env)) if (env[key] === undefined) delete env[key]
   const child = spawn(runtime.argv[0]!, runtime.argv.slice(1), {

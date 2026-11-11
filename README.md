@@ -11,15 +11,15 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-Run delegated text tasks in **Google Antigravity ACP Server 1.4.5** from DeepSeek Harness. Each task starts a fresh native process and session. Antigravity handles reasoning and tools; DSH manages delegation, cancellation, and result delivery.
+Run delegated text tasks in **Antigravity CLI 1.5.5 through `agy acp`** from DeepSeek Harness. Each task starts a fresh native process and session. Antigravity handles reasoning and tools; DSH manages delegation, cancellation, and result delivery.
 
-The architecture follows the official [Codex subagent provider](https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.2-rc.1/packages/subagent/subagent-codex). This is a community integration. It uses the ACP Server directly and requires neither the `agy` CLI nor the Antigravity App.
+The architecture follows the official [Codex subagent provider](https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.2-rc.1/packages/subagent/subagent-codex). This is a community integration. It launches `agy acp` over stdio. The release bundles the official CLI; an existing CLI can be selected with `agyPath`. The Antigravity App does not need to run.
 
 | Requirement | Supported |
 |---|---|
 | Platform | Windows x64 |
 | DeepSeek Harness | `0.2.1` from rc.3, and `0.2.2` from rc.1; subsequent RCs and stable releases within these series |
-| Native runtime | ACP Server 1.4.5 and its matching harness, included in the release TGZ |
+| Native runtime | Official agy CLI 1.5.5, included in the release TGZ; optional existing `agyPath` |
 | Host dependencies | DSH packages, Cordis, and Schemastery supplied by the host/Profile |
 | Model and effort | Native defaults or explicit ACP-supported values; unrestricted by default, no fallback |
 
@@ -38,23 +38,23 @@ The compatibility range is `>=0.2.1-rc.3 <0.2.2-0 || >=0.2.2-rc.1 <0.2.3-0`. The
 
 ### Installing the Bundle
 
-Download **`ashenjyy-dsh-subagent-antigravity-0.2.5-win32-x64.tgz`** from [v0.2.5](https://github.com/AshenJyy/dsh-subagent-antigravity/releases/tag/v0.2.5). Choose the release TGZ, not GitHub's source-code archive. Install it through DSH's Plugins page or the CLI for your Profile:
+Download **`ashenjyy-dsh-subagent-antigravity-0.3.0-win32-x64.tgz`** from [v0.3.0](https://github.com/AshenJyy/dsh-subagent-antigravity/releases/tag/v0.3.0). Choose the release TGZ, not GitHub's source-code archive. Install it through DSH's Plugins page or the CLI for your Profile:
 
 ```powershell
-dsh plugin --profile desktop add "C:/path/to/ashenjyy-dsh-subagent-antigravity-0.2.5-win32-x64.tgz"
+dsh plugin --profile desktop add "C:/path/to/ashenjyy-dsh-subagent-antigravity-0.3.0-win32-x64.tgz"
 ```
 
-The TGZ already contains both native executables and their integrity record. Leave `runtimeDir` unset; no separate runtime installation or download is needed. The host must supply a compatible dependency set. Restart DSH if prompted.
+The TGZ contains official `agy.exe` and its integrity record. Leave `runtimeDir` and `agyPath` unset to use it; no separate installation is needed. Set `agyPath` to your existing CLI executable to follow its updates. The host must supply a compatible dependency set. Restart DSH if prompted.
 
 ### Authentication
 
-**Installation does not open a login page. Configure authentication before the first task.** The default `native` uses ACP's saved selection and enterprise policy; it does not automatically select personal-account login. App or `agy` login is not guaranteed to carry over.
+**Installation does not open a login page. Configure authentication before the first task.** The default `native` reuses agy CLI's saved authentication and settings without sending `authenticate`. Use the same Windows user and native home as your signed-in CLI. App/IDE credential sharing follows Google's credential manager; this plugin does not copy tokens.
 
-Choose personal Google OAuth, Gemini Enterprise OAuth, Gemini API key, Agent Platform ADC/Express, an enterprise gateway, or existing native configuration. Account and administrator policy determine availability.
+Choose cached CLI authentication, personal Google OAuth, Gemini Enterprise OAuth, Gemini API key, or Agent Platform. Explicit methods must be advertised by the running CLI. Legacy gateway configuration does not guarantee runtime support.
 
 <a id="first-login-on-windows-desktop"></a>
 
-See the **[authentication guide](docs/AUTHENTICATION.md)** for Windows login commands, provider settings, and ADC path troubleshooting. Upgrading from 0.1.0 while keeping its ADC route requires `authMethod: agent-platform` and `agentPlatformMode: adc`.
+See the **[authentication guide](docs/AUTHENTICATION.md)** for Windows login commands, provider settings, and ADC path troubleshooting. To retain an explicit ADC route use `authMethod: agent-platform` and `agentPlatformMode: adc`; to inherit agy login choose `native` for both.
 
 ### Configuration
 
@@ -74,7 +74,7 @@ The parent receives a child ID after native startup and configuration, then an a
 
 <a id="windows-credential-path-troubleshooting"></a>
 
-Missing runtime files, authentication failures, and unsupported model settings fail explicitly. There is no automatic task retry, model substitution, CLI fallback, or rollback of completed side effects. For session or credential errors, start with [Windows troubleshooting](docs/AUTHENTICATION.md#windows-credential-path-troubleshooting).
+Missing runtime files, authentication failures, and unsupported model settings fail explicitly. There is no automatic task retry, model substitution, execution-entry fallback, or rollback of completed side effects. For session or credential errors, start with [Windows troubleshooting](docs/AUTHENTICATION.md#windows-credential-path-troubleshooting).
 
 ## Understand the implementation
 
@@ -85,8 +85,10 @@ The [architecture guide](docs/ARCHITECTURE.md) covers source responsibilities, A
 - [Documentation index](docs/README.md)
 - [Official Codex provider](https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.2-rc.1/packages/subagent/subagent-codex)
 - [DSH Subagent subsystem](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.2-rc.1/docs/subsystems/subagent.md)
-- [Pinned official ACP distribution](https://github.com/agentclientprotocol/registry/blob/02b460362cfedf4d43b03df7aad6d79a353fe064/antigravity-acp/agent.json)
+- [Official agy ACP interface](https://antigravity.google/docs/ide/extensions/acp)
 - [Protocol and compatibility evidence](docs/ACP-VERIFICATION.md)
+
+Carbon + low was accepted in a configuration-only session with agy 1.5.5 using cached login. No model inference was performed. See the [verification record](docs/ACP-VERIFICATION.md).
 
 ## Model experience
 
@@ -98,7 +100,7 @@ One text prompt per session; no resume, task-question UI, automatic retry, or ex
 
 ## Dev note
 
-Use Windows x64 and Node.js 22 or later:
+Use Windows x64 and Node.js 24 for release packaging:
 
 ```sh
 npm ci --ignore-scripts

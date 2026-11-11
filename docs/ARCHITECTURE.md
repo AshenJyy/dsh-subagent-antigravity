@@ -19,19 +19,19 @@
 | [`src/run.ts`](../src/run.ts) | Managed subprocess, startup, cancellation, result settlement, teardown |
 | [`src/wire.ts`](../src/wire.ts) | Minimal ACP v1 adapter over DSH's shared JSON-RPC line transport |
 | [`src/model-policy.ts`](../src/model-policy.ts) | Advertised choices, exact selection, optional local policy |
-| [`src/runtime.ts`](../src/runtime.ts) | Pinned native-payload resolution and integrity cache |
+| [`src/runtime.ts`](../src/runtime.ts) | Bundled CLI verification or explicit agyPath resolution |
 | [`src/install.ts`](../src/install.ts) | Explicit official-payload download and verified installation |
 | [`cordis.patch.yml`](../cordis.patch.yml) | Provider and global tool registration |
 
 ## Run flow
 
-Resolve the installed native pair → spawn through `ctx.subprocess` → validate `antigravity-acp`, version `1.4.5`, ACP v1 → retain native authentication or select the configured method → create a fresh session → set and verify configured model/effort → publish the run → send one text prompt → collect the authoritative ACP terminal result → close stdin and wait → escalate managed-range termination when necessary → notify the parent after cleanup.
+Resolve the bundled or configured agy CLI → spawn `agy acp` through `ctx.subprocess` → validate `Antigravity ACP Server`, stable CLI 1.x from 1.5.5, ACP v1 → retain native authentication or select the configured method → create a fresh session → set and verify configured model/effort using `thought_level` → publish the run → send one text prompt → collect the authoritative ACP terminal result → close stdin and wait → escalate managed-range termination when necessary → notify the parent after cleanup.
 
 Cancellation settles locally and sends `session/cancel` best effort. Process cleanup waits for the entire managed range, including descendants. Early exit never becomes successful completion. Successful empty answers and unknown terminal reasons are errors.
 
 ## Performance
 
-The complete bundle requires no runtime download or extraction at first use. Runtime resolution coalesces concurrent checks and verifies hashes on first use or metadata changes; later tasks reuse verified metadata. Stderr forwarding uses stream backpressure instead of synchronous file writes. Assistant text is accumulated in bounded chunks; thought and tool payloads are not retained. DSH's existing admission control governs concurrency. These changes reduce adapter overhead without changing the one-process-per-task architecture; no measured speedup is claimed.
+The complete bundle requires no runtime download or extraction at first use. Runtime resolution coalesces concurrent checks and verifies hashes on first use or metadata changes; later tasks reuse verified metadata. Stderr forwarding uses stream backpressure instead of synchronous file writes. Assistant text is accumulated in bounded chunks; thought and tool payloads are not retained. DSH's existing admission control governs concurrency. No-op model/effort/mode setters are skipped. The configured external CLI is resolved without hashing the bundled binary or running a separate version command; initialize provides its identity. These changes reduce adapter overhead without changing the one-process-per-task architecture; no measured speedup is claimed.
 
 ## Child request
 
@@ -43,13 +43,13 @@ The parent sees the launch acknowledgment and eventual assistant result or safe 
 
 ## Known limitations and deferred work
 
-- **Compatibility range:** DSH `>=0.2.1-rc.3 <0.2.2-0 || >=0.2.2-rc.1 <0.2.3-0`; subsequent RCs and stable releases within the 0.2.1 and 0.2.2 series are admitted without per-version registration. Cordis and Schemastery peers accept the matching 4.0/4.1 and 3.18/3.19 host lines. An upstream breaking change can still require an adapter update. ACP runtime `1.4.5` and ACP protocol v1 remain pinned.
-- **Authentication evidence:** All advertised native routes are represented in configuration, but the added 0.2.0 flows were checked against source only. They were not each logged in or exercised with inference. Account and enterprise policy may make a method unavailable.
+- **Compatibility range:** DSH `>=0.2.1-rc.3 <0.2.2-0 || >=0.2.2-rc.1 <0.2.3-0`; subsequent RCs and stable releases within the 0.2.1 and 0.2.2 series are admitted without per-version registration. Cordis and Schemastery peers accept the matching 4.0/4.1 and 3.18/3.19 host lines. An upstream breaking change can still require an adapter update. Bundled CLI `1.5.5` is pinned; external CLI 1.x from 1.5.5 is admitted after identity and protocol-shape checks. ACP v1 remains required.
+- **Authentication evidence:** Cached CLI login and Carbon + low configuration were observed on CLI 1.5.5 without an authenticate request or model inference. Explicit authentication routes were not each exercised. Account and enterprise policy may make a method unavailable.
 - **OAuth can require interaction:** First login or reauthentication can open a browser. The authentication command does not make later tasks strictly noninteractive.
 - **Fresh is not ephemeral:** ACP can persist its own sessions. The adapter does not resume them, but does not claim Codex's `ephemeral: true` guarantee or erase native records.
-- **App plugins are not automatically inherited:** Shared MCP, skills, and hooks were source-reviewed with ACP 1.4.3; this behavior has not been revalidated with 1.4.5. It is a separate backend, not an attached App session; App-only plugin packages and UI features may be unavailable.
+- **App plugins are not automatically inherited:** Native agy customization discovery applies. It is a separate CLI session, not an attached App session; App-only UI features may be unavailable. Customization execution was not exercised.
 - **Local allowlists govern this adapter's selections:** Hooks, MCP servers, plugins, and Google's closed runtime can perform their own work. The adapter cannot attest that every internal or external auxiliary operation uses the selected model. Strict deployments should additionally control native hooks/plugins, tools, and server-side model access.
 - **No task-question UI:** Agent questions and unsupported client requests cannot be answered. Slash-command prompts are rejected instead of being interpreted as model or mode changes. Native authentication browser flows are separate from these task questions.
 - **Text only, one turn:** Non-text blocks are rejected; no follow-up, structured output, live DSH progress transcript, automatic retries, or side-effect rollback.
 - **No task execution deadline:** The startup deadline does not limit a running task. DSH cancellation remains the stop mechanism.
-- **Platform evidence:** Windows x64 startup and non-inference configuration were observed. Other pinned platform downloads are listed by the official registry but were not exercised here.
+- **Platform evidence:** Windows x64 startup and non-inference configuration were observed. No other platforms are distributed.

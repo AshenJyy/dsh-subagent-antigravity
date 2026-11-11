@@ -20,6 +20,7 @@ import {
 import { authenticationEnvironment, resolveAuthMethod, type AuthenticationConfig } from './auth.js'
 import { resolveRuntime } from './runtime.js'
 import { AntigravityWire } from './wire.js'
+import { AntigravityProtocolError } from './model-policy.js'
 
 export interface AntigravityRunSpec extends AuthenticationConfig {
   cwd: string
@@ -29,6 +30,7 @@ export interface AntigravityRunSpec extends AuthenticationConfig {
   allowedEfforts?: readonly string[]
   disabledTools?: readonly string[]
   runtimeDir?: string
+  agyPath?: string
   permissionMode: 'deny' | 'allow-once'
   env: Record<string, string>
   disposeGraceMs: number
@@ -46,7 +48,13 @@ class RunFailure extends Error {
   constructor(stage: Stage, category: Category, cause?: unknown, outcome?: SubprocessOutcome) {
     const exit = outcome?.exitCode === null || outcome?.exitCode === undefined ? '' : `; exit code: ${outcome.exitCode}`
     const signal = outcome?.signal ? `; signal: ${outcome.signal}` : ''
-    super(`Antigravity failure (stage: ${stage}; category: ${category}${exit}${signal})`, { cause })
+    // Only adapter-authored errors are safe to show. Never expose native RPC
+    // payloads, stderr, arbitrary causes, or configured credential values.
+    const safeCause = cause instanceof AntigravityProtocolError ? cause : undefined
+    const reason = safeCause?.reason ? `; reason: ${safeCause.reason}` : ''
+    const actualCategory = category === 'protocol' && safeCause?.reason ? 'unavailable' : category
+    const detail = safeCause ? `: ${safeCause.message}` : ''
+    super(`Antigravity failure (stage: ${stage}; category: ${actualCategory}${reason}${exit}${signal})${detail}`, { cause })
     this.name = 'AntigravityRunFailure'
   }
 }
@@ -134,7 +142,7 @@ export async function startAntigravityRun(
   request.signal.throwIfAborted()
   const authMethod = resolveAuthMethod(spec.authMethod)
   let runtime: Awaited<ReturnType<typeof resolveRuntime>>
-  try { runtime = await resolveRuntime(spec.runtimeDir) }
+  try { runtime = await resolveRuntime(spec.runtimeDir, spec.agyPath, spec.geminiHome) }
   catch (cause) { throw new RunFailure('runtime', 'unavailable', cause) }
   request.signal.throwIfAborted()
 

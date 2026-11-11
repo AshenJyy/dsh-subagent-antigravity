@@ -6,6 +6,20 @@ Entries describe published release behavior. Documentation on the main branch ma
 
 以下记录已发布版本的行为。主分支文档可能比已有 TGZ 内的说明更新；各版本的核对依据与验证范围见 [ACP 记录](docs/ACP-VERIFICATION.md)。
 
+## [0.3.0](https://github.com/AshenJyy/dsh-subagent-antigravity/releases/tag/v0.3.0)
+
+- Launch the official agy CLI through `agy acp`, replacing standalone ACP Server. Bundle the unmodified Windows x64 CLI 1.5.5 with its official SHA-512, or use an explicit existing `agyPath`.
+- Reuse the CLI's current login/settings in native mode. Preserve explicit advertised authentication methods and existing Harness compatibility.
+- Adapt `thought_level` and setter configuration notifications; verify the final policy before submitting work, monitor later drift, and skip setters whose values already match.
+- Configuration-only inspection accepted Carbon + low with cached CLI login. No model task, automated test, or performance benchmark was run.
+
+- Distinguish unavailable model, effort, and mode choices from generic protocol failures. Preserve adapter-authored diagnostic details without exposing native error payloads or credentials.
+- Record the configuration-only investigation showing that standalone ACP 1.4.5 did not advertise Carbon on the inspected Agent Platform route. No model fallback or inference was performed.
+
+区分模型、思考强度和权限模式不可用的原因，保留插件自身生成的安全诊断。独立 ACP 1.4.5 的本次 Agent Platform 会话未列出 Carbon；未切换其他模型或执行推理。
+
+改用 `agy acp`，完整 TGZ 内置官方 CLI 1.5.5，也可指定本机 agy。native 复用 CLI 登录，适配新版 effort 字段和配置通知，跳过重复设置。已完成 Carbon + low 的无推理配置核对；DSH 兼容与宿主依赖策略保持不变。
+
 ## [0.2.5](https://github.com/AshenJyy/dsh-subagent-antigravity/releases/tag/v0.2.5)
 
 - Update the bundled official ACP Server and matching native harness from 1.4.3 to 1.4.5, pinned to ACP Registry commit `02b460362cfedf4d43b03df7aad6d79a353fe064` and its published archive hashes.

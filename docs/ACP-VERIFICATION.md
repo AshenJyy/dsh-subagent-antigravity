@@ -86,3 +86,20 @@ Reviewed on 2026-11-05 against the official `dsh-v0.2.2-rc.1` tag, commit [`6649
 - Official archive SHA-256: `d24f4c73c9f96d4f44384e281c855a56c72d8eaa9c5b0fad7ccb1635c6b63f50`.
 - The release uses the matching executable pair and retains archive/file integrity verification. ACP identity validation imports the pinned runtime version rather than duplicating it.
 - Validation scope: TypeScript compilation, registry/manifest review, and release archive/hash inspection. No automated tests, ACP session, authentication flow, or model inference were run for this update. Historical 1.4.3 observations above do not establish 1.4.5 model availability or Carbon inference.
+
+### 1.4.5 Carbon configuration investigation (2026-11-11)
+
+After the release, an explicit configuration-only inspection used the installed Windows x64 1.4.5 runtime with Agent Platform ADC. `initialize`, `authenticate`, and `session/new` completed. The session advertised `gemini-4-argon`, `gemini-3.8-flash`, `gemini-3.7-flash`, `gemini-3.6-flash`, `gemini-3.5-flash`, and `gemini-3.1-pro`; its thinking levels were `low`, `medium`, and `high`.
+
+`gemini-4-carbon` was absent. The adapter rejected that configured model before sending `session/set_config_option` for Carbon or any `session/prompt`. Thus the observed 0.2.5 `stage: session; category: protocol` represented an unavailable model selector, not a failure to create the native session. This observation applies to that runtime and authentication route; it is not an account entitlement or backend inference determination. No automated tests or model inference were run.
+
+The official registry still listed 1.4.5 at inspection time. Google's newer [`agy acp` documentation](https://antigravity.google/docs/ide/extensions/acp) describes a different CLI-hosted ACP entry point. This investigation does not claim that entry point has been integrated or that Carbon has been verified through it.
+
+## 0.3.0 agy CLI ACP migration (2026-11-11)
+
+- The official Windows installer at `https://antigravity.google/cli/install.ps1` names the CLI updater manifest. That manifest supplied CLI 1.5.5, its immutable Google Storage URL, and SHA-512 `11e01089801b86db04d92d4cec3f67bbeff90ca1076ae46bc7475415ab5f3ad7b53419252b7b2c2a68066375b2b6821a6e74a0a959892dad656d3ef769d44955` (226,117,784 bytes). The bundle includes that unmodified single executable.
+- `initialize` returned ACP v1, `Antigravity ACP Server`, version 1.5.5. Advertised methods were personal OAuth, business OAuth, Gemini API key, and Agent Platform. No gateway method was advertised.
+- `session/new` completed with existing CLI authentication, without sending `authenticate` or opening a login page. This proves native cached state could create this session, not that every App/CLI account or backend is interchangeable.
+- The session advertised `gemini-4-carbon`, including low/medium/high. Configuring Carbon + low succeeded, including through the revised adapter. No `session/prompt` was sent. An intermediate inspection also accepted the then-configured Argon + low, without model inference.
+- CLI uses `thought_level`, emits `config_option_update` for setters, and exposes default/accept-edits/plan modes. Startup now validates intermediate replies without applying the final model policy too early; final configured values and default mode must match before publishing the run. Later drift still fails.
+- Compilation and package/integrity inspection are separate from configuration inspection. No automated tests, tool tasks, inference, cancellation run, authentication matrix, or measured performance benchmark were performed. Future CLI 1.x admission is a compatibility policy, not a validation claim.

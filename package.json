@@ -1,6 +1,6 @@
 {
   "name": "@ashenjyy/dsh-subagent-antigravity",
-  "version": "0.2.5",
+  "version": "0.3.0",
   "description": "One-shot native Antigravity subagents for DeepSeek Harness with optional model and effort configuration",
   "license": "MIT",
   "type": "module",
@@ -60,9 +60,6 @@
     "@deepseek-ai/dsh-tool-subagent": ">=0.2.1-rc.3 <0.2.2-0 || >=0.2.2-rc.1 <0.2.3-0",
     "@deepseek-ai/schemastery": "~3.18.5 || ~3.19.0"
   },
-  "dependencies": {
-    "yauzl": "3.2.0"
-  },
   "devDependencies": {
     "@deepseek-ai/cordis": "4.1.0",
     "@deepseek-ai/dsh-brand": "0.2.2-rc.1",
@@ -75,7 +72,6 @@
     "@deepseek-ai/dsh-tool-subagent": "0.2.2-rc.1",
     "@deepseek-ai/schemastery": "3.19.0",
     "@types/node": "22.15.30",
-    "@types/yauzl": "2.10.3",
     "typescript": "5.9.3"
   },
   "repository": {

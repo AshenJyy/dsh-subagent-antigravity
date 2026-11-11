@@ -9,14 +9,15 @@
 | `agentPlatformMode` | `native` | 显式 `agent-platform` 的原生选择、`adc` 或 `api-key` 模式 |
 | `geminiHome` | 原生目录 | 可选的持久原生目录，须为绝对路径 |
 | `model` | 原生默认值 | 可选的 ACP `model` 精确配置值 |
-| `effort` | 原生默认值 | 可选的 ACP `thinking_level` 精确值 |
+| `effort` | 原生默认值 | 可选的 ACP `thought_level` 精确值 |
 | `allowedModels` | 不限制 | 可选的本地模型 family 白名单 |
 | `allowedEfforts` | 不限制 | 可选的本地 effort 白名单 |
-| `disabledTools` | 原生默认值 | 可选的原生会话禁用工具 ID |
+| `disabledTools` | 原生默认值 | 当前 CLI ACP 未公布此接口；非空列表明确报错 |
 | `gcpProject` | 原生环境/设置 | 可选的 Agent Platform 项目覆盖值，并非所有登录方式都需要 |
 | `gcpLocation` | 原生环境/设置 | 可选的 Agent Platform 区域覆盖值 |
 | `adcPath` | 原生 ADC 发现 | 可选的 ADC 文件绝对路径 |
-| `runtimeDir` | 包内目录 | 可选的已安装原生文件目录 |
+| `agyPath` | 内置 CLI | 已有 `agy.exe` 的绝对路径；与 `runtimeDir` 互斥 |
+| `runtimeDir` | 包内目录 | 包含固定版本 `agy.exe` 及校验记录的绝对目录 |
 | `permissionMode` | `deny` | 拒绝审批；或 `allow-once` 允许受支持的普通工具单次审批 |
 | `env` | `{}` | 叠加在 DSH 已清理环境之上的显式变量 |
 | `startupTimeoutMs` | `90000` | 初始化、认证方式选择、建会话、配置的总期限 |
@@ -26,7 +27,7 @@
 
 模型和 effort 固定在 Provider 实例中，不是工具调用的动态参数。需要多档配置时挂载多个实例和不同工具名。使用 ACP 实际公布的值，不要从 App 或 CLI 标签猜测。
 
-原生权限模式保持 `default`。`allow-once` 仅允许识别出的普通 read/edit/execute/search/fetch 请求；不切换 YOLO、不代答用户问题、不永久授权、不自动批准未知或 MCP `other` 请求。这里的策略不等同于操作系统沙箱。
+原生权限模式保持 `default`。`allow-once` 仅允许识别出的普通 read/edit/execute/search/fetch 请求；不切换 YOLO、不代答用户问题、不永久授权、不自动批准未知或 MCP `other` 请求。这里的策略不等同于操作系统沙箱；原生规则已允许的工具可能不发起审批请求。
 
 ## 暴露工具
 

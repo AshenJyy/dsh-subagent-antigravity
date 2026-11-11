@@ -9,14 +9,15 @@
 | `agentPlatformMode` | `native` | For explicit `agent-platform`: native selection, `adc`, or `api-key` |
 | `geminiHome` | Native home | Optional absolute, persistent native home directory |
 | `model` | Native default | Optional exact ACP `model` configuration value |
-| `effort` | Native default | Optional exact ACP `thinking_level` value |
+| `effort` | Native default | Optional exact ACP `thought_level` value |
 | `allowedModels` | Unrestricted | Optional deployment allowlist of ACP model-family values |
 | `allowedEfforts` | Unrestricted | Optional deployment allowlist of reasoning values |
-| `disabledTools` | Native defaults | Optional native tool IDs disabled for the session |
+| `disabledTools` | Native defaults | Unsupported by this CLI ACP surface; nonempty lists fail explicitly |
 | `gcpProject` | Native environment/settings | Optional Agent Platform project override; not required by all login methods |
 | `gcpLocation` | Native environment/settings | Optional Agent Platform location override |
 | `adcPath` | Native ADC discovery | Optional absolute ADC file path |
-| `runtimeDir` | Package-local installation | Optional absolute directory containing the installed native pair |
+| `agyPath` | Bundled CLI | Absolute deployment-owned `agy.exe`; mutually exclusive with `runtimeDir` |
+| `runtimeDir` | Package-local installation | Optional absolute directory containing the pinned `agy.exe` and integrity record |
 | `permissionMode` | `deny` | `deny`, or `allow-once` for supported ordinary tool approvals |
 | `env` | `{}` | Explicit child environment over DSH's credential-scrubbed base |
 | `startupTimeoutMs` | `90000` | Deadline for initialization, authentication selection, session creation, and configuration |
@@ -24,9 +25,9 @@
 | `disposeGraceMs` | `3000` | Shared managed-process termination grace |
 | `maxOutputBytes` | `8388608` | Maximum retained assistant text; overflow fails explicitly |
 
-`model` and `effort` are deployment settings for a provider instance, not tool-call parameters. Multiple named instances may expose different settings. The current adapter validates the pinned runtime's `model`, `thinking_level`, and `mode` configuration surface. Use values advertised by ACP, not labels inferred from another Antigravity client.
+`model` and `effort` are deployment settings for a provider instance, not tool-call parameters. Multiple named instances may expose different settings. The current adapter validates agy CLI's `model`, `thought_level`, and `mode` configuration surface. Use values advertised by ACP, not labels inferred from another Antigravity client.
 
-The native permission mode remains `default`. `allow-once` answers recognized ordinary read/edit/execute/search/fetch approvals once. It does not select YOLO, answer user questions, grant permanent permission, or auto-approve unknown/MCP `other` requests. Neither setting is an OS sandbox.
+The native permission mode remains `default`. `allow-once` answers recognized ordinary read/edit/execute/search/fetch approvals once. It does not select YOLO, answer user questions, grant permanent permission, or auto-approve unknown/MCP `other` requests. Neither setting is an OS sandbox. Native permission rules can already authorize an operation without asking this adapter.
 
 ## Exposing the tool
 
